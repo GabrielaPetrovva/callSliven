@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CallSliven · тест на подаването</title>
+<style>
+  body { font: 16px/1.5 system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+  h1 { font-size: 1.3rem; } h2 { font-size: 1.05rem; margin-top: 2rem; }
+  label { display: block; margin: .8rem 0 .2rem; font-weight: 600; }
+  input, textarea { width: 100%; box-sizing: border-box; padding: .5rem; font: inherit; border: 1px solid #888; border-radius: 6px; }
+  textarea { min-height: 7rem; }
+  .row { display: flex; gap: .8rem; } .row > div { flex: 1; }
+  button { margin-top: 1rem; padding: .6rem 1.2rem; font: inherit; border-radius: 6px; border: 1px solid #333; background: #1f4f8f; color: #fff; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: default; }
+  pre { background: #f2f2f2; padding: .8rem; border-radius: 6px; overflow-x: auto; white-space: pre-wrap; }
+  .warn { background: #fff3cd; padding: .6rem .8rem; border-radius: 6px; }
+  @media (prefers-color-scheme: dark) { body { background: #151515; color: #eee; } pre { background: #262626; } input, textarea { background: #222; color: #eee; } .warn { background: #4a3f12; } }
+</style>
+</head>
+<body>
+<h1>CallSliven · тест на подаването на сигнал</h1>
+<p class="warn">Само за разработка. Не се качва в Hosting и не е част от сайта.</p>
+
+<h2>0. Настройки</h2>
+<p>Попълни трите стойности в началото на скрипта на този файл (търси <code>НАСТРОЙКИ</code>).</p>
+
+<h2>1. Вход</h2>
+<div class="row">
+  <div><label for="email">Имейл</label><input id="email" type="email" autocomplete="username"></div>
+  <div><label for="password">Парола</label><input id="password" type="password" autocomplete="current-password"></div>
+</div>
+<button id="login">Вход</button> <span id="who"></span>
+
+<h2>2. Сигнал</h2>
+<label for="sub">Номер на подкатегория (виж в Table Editor → subcategories → id)</label>
+<input id="sub" type="number" min="1" value="1">
+<label for="title">Заглавие</label>
+<input id="title" maxlength="100" value="Тестов сигнал за дупка">
+<label for="desc">Описание</label>
+<textarea id="desc" maxlength="2000">Голяма дупка на улицата пред блока. Опасна е за колите.</textarea>
+<label for="photos">Снимки (до 3; JPG, PNG или WebP; до 5 MB всяка)</label>
+<input id="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+<div class="row">
+  <div><label for="lat">Ширина (lat)</label><input id="lat" type="number" step="any" value="42.6824"></div>
+  <div><label for="lng">Дължина (lng)</label><input id="lng" type="number" step="any" value="26.3229"></div>
+</div>
+<div id="ts" style="margin-top:1rem"></div>
+<button id="send" disabled>Изпрати сигнала</button>
+
+<h2>Отговор</h2>
+<pre id="out">—</pre>
+
+<script>
+  // показва всяка грешка в полето "Отговор", вместо да мълчи
+  window.addEventListener("error", function (e) {
+    var el = document.getElementById("out");
+    if (el) el.textContent = "ГРЕШКА В СТРАНИЦАТА: " + (e.message || "не се зареди скрипт: " + (e.target && e.target.src));
+  }, true);
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+  // резервен адрес, ако първият не е достъпен
+  if (!window.supabase) {
+    document.write('<script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"><\/script>');
+  }
+</script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+<script>
+  // ===== НАСТРОЙКИ =====
+  const SUPABASE_URL = "https://mrqqzgatxrnaeqdsummo.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ycXF6Z2F0eHJuYWVxZHN1bW1vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4MDEyNTQsImV4cCI6MjEwNzM3NzI1NH0.RiSDNqj5SdvORQSCW_S0uYuTS38RRDvV8V0X83nVbcg";        // Project Settings → API → anon / public
+  const TURNSTILE_SITE_KEY = "0x4AAAAAAFYmf1nodSzjQ7e6";   // публичният ключ от Cloudflare
+  // =====================
+
+  const $ = (id) => document.getElementById(id);
+  const out = (v) => { $("out").textContent = typeof v === "string" ? v : JSON.stringify(v, null, 2); };
+  if (!window.supabase) { out("Не се зареди библиотеката supabase-js. Провери интернет връзката, блокиращи добавки в браузъра (adblock) и пробвай пак."); throw new Error("supabase-js липсва"); }
+  if (SUPABASE_ANON_KEY.indexOf("ПОСТАВИ") === 0 || TURNSTILE_SITE_KEY.indexOf("ПОСТАВИ") === 0) { out("В началото на скрипта още стоят ПОСТАВИ_ТУК... Замени ги с ключовете си."); }
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let session = null;
+  let token = null;
+  let widgetId = null;
+  // randomUUID работи само на https или localhost; резервен вариант за другите адреси
+  function newUuid() {
+    if (crypto.randomUUID) return crypto.randomUUID();
+    const b = crypto.getRandomValues(new Uint8Array(16));
+    b[6] = (b[6] & 0x0f) | 0x40; b[8] = (b[8] & 0x3f) | 0x80;
+    const h = Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
+    return h.slice(0, 8) + "-" + h.slice(8, 12) + "-" + h.slice(12, 16) + "-" + h.slice(16, 20) + "-" + h.slice(20);
+  }
+  let idemKey = newUuid();
+
+  function refreshButton() { $("send").disabled = !(session && token); }
+
+  function mountTurnstile() {
+    if (!window.turnstile) { setTimeout(mountTurnstile, 200); return; }
+    widgetId = window.turnstile.render("#ts", {
+      sitekey: TURNSTILE_SITE_KEY,
+      callback: (t) => { token = t; refreshButton(); },
+      "expired-callback": () => { token = null; refreshButton(); },
+      "error-callback": () => { token = null; refreshButton(); out("Turnstile даде грешка. Провери Site key и дали localhost е в списъка с хостове."); },
+    });
+  }
+  mountTurnstile();
+
+  $("login").addEventListener("click", async () => {
+    const { data, error } = await sb.auth.signInWithPassword({ email: $("email").value.trim(), password: $("password").value });
+    if (error) { out("Входът не мина: " + error.message); return; }
+    session = data.session;
+    $("who").textContent = "Влязъл: " + data.user.email;
+    out("Входът е успешен.");
+    refreshButton();
+  });
+
+  $("send").addEventListener("click", async () => {
+    $("send").disabled = true;
+    // токенът на сесията може да е подновен
+    const { data } = await sb.auth.getSession();
+    const jwt = data.session ? data.session.access_token : null;
+
+    // снимките отиват първо във временна папка: tmp/<потребител>/<ключ на подаването>/<файл>
+    const files = Array.from($("photos").files || []).slice(0, 3);
+    const photoPaths = [];
+    for (let i = 0; i < files.length; i++) {
+      const ext = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" }[files[i].type];
+      if (!ext) { out("Файл " + files[i].name + " не е JPG, PNG или WebP."); refreshButton(); return; }
+      const path = "tmp/" + data.session.user.id + "/" + idemKey + "/" + (i + 1) + "." + ext;
+      const up = await sb.storage.from("report-photos").upload(path, files[i], { contentType: files[i].type, upsert: true });
+      if (up.error) { out("Качването на снимка " + (i + 1) + " не мина: " + up.error.message); refreshButton(); return; }
+      photoPaths.push(path);
+    }
+    const res = await fetch(SUPABASE_URL + "/functions/v1/submit-report", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + jwt, "apikey": SUPABASE_ANON_KEY },
+      body: JSON.stringify({
+        subcategory_id: Number($("sub").value),
+        title: $("title").value,
+        description: $("desc").value,
+        lat: Number($("lat").value),
+        lng: Number($("lng").value),
+        idempotency_key: idemKey,
+        turnstile_token: token,
+        photo_paths: photoPaths,
+      }),
+    });
+    let body; try { body = await res.json(); } catch { body = "(няма JSON)"; }
+    out({ http_status: res.status, body });
+    if (res.status === 201) idemKey = newUuid();   // следващият сигнал е нов
+    // всеки токен на Turnstile важи за една проверка
+    token = null;
+    if (window.turnstile && widgetId !== null) window.turnstile.reset(widgetId);
+    refreshButton();
+  });
+</script>
+</body>
+</html>
