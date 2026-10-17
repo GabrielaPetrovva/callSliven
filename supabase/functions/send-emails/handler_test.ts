@@ -23,6 +23,9 @@ function setup(opts: {
   dispatchIds?: number[];
   outboxIds?: number[];
   resend?: (n: number) => Response;
+  photos?: string[];
+  photosError?: boolean;
+  signError?: boolean;
   dispatchRow?: unknown;
   outboxRow?: unknown;
 } = {}) {
@@ -32,9 +35,15 @@ function setup(opts: {
   const rpcCalls: { name: string; args: Record<string, unknown> }[] = [];
   const sent: { to: string[]; subject: string; html: string; text: string; idem: string }[] = [];
   let n = 0;
+  const signedCalls: { paths: string[]; expires: number }[] = [];
   const deps = {
     env: (k: string) => env[k],
     sleep: () => Promise.resolve(),
+    signedUrls: (paths: string[], expires: number) => {
+      signedCalls.push({ paths, expires });
+      if (opts.signError) return Promise.resolve({ urls: null, error: { message: "sign boom" } });
+      return Promise.resolve({ urls: paths.map((p) => `https://files.example/${p}?token=T`), error: null });
+    },
     fetch: ((_u: string | URL | Request, init?: RequestInit) => {
       const body = JSON.parse(String(init?.body));
       sent.push({ ...body, idem: (init?.headers as Record<string, string>)["Idempotency-Key"] });
@@ -47,12 +56,15 @@ function setup(opts: {
         case "dispatch_claim": return Promise.resolve({ data: (opts.dispatchIds ?? []).map((id) => ({ out_id: id })), error: null });
         case "outbox_claim": return Promise.resolve({ data: (opts.outboxIds ?? []).map((id) => ({ out_id: id })), error: null });
         case "dispatch_get_payload": return Promise.resolve({ data: [opts.dispatchRow ?? dispatchRow], error: null });
+        case "dispatch_get_photos":
+          if (opts.photosError) return Promise.resolve({ data: null, error: { message: "photos boom" } });
+          return Promise.resolve({ data: (opts.photos ?? []).map((p, i) => ({ out_path: p, out_position: i + 1 })), error: null });
         case "outbox_get_payload": return Promise.resolve({ data: [opts.outboxRow ?? outboxRow], error: null });
         default: return Promise.resolve({ data: null, error: null });
       }
     },
   };
-  return { deps, rpcCalls, sent };
+  return { deps, rpcCalls, sent, signedCalls };
 }
 
 const post = (secret?: string) =>
@@ -165,4 +177,30 @@ Deno.test("помощни функции", () => {
   assert(!safeEqual("abc", "abd"));
   assert(!safeEqual("abc", "abcd"));
   assert(!safeEqual("", "x"));
+});
+
+Deno.test("снимки: линковете влизат в писмото и важат 7 дни", async () => {
+  const { deps, sent, signedCalls } = setup({ dispatchIds: [5], photos: ["reports/r/1.jpg", "reports/r/2.png"] });
+  await handle(post(SECRET), deps);
+  assertEquals(signedCalls, [{ paths: ["reports/r/1.jpg", "reports/r/2.png"], expires: 7 * 24 * 3600 }]);
+  assert(sent[0].text.includes("1. https://files.example/reports/r/1.jpg?token=T"));
+  assert(sent[0].text.includes("важат 7 дни"));
+  assert(sent[0].html.includes("Снимка 2"));
+});
+
+Deno.test("без снимки писмото е без раздел за снимки", async () => {
+  const { deps, sent, signedCalls } = setup({ dispatchIds: [5] });
+  await handle(post(SECRET), deps);
+  assertEquals(signedCalls.length, 0);
+  assert(!sent[0].text.includes("Снимки"));
+});
+
+Deno.test("снимки: грешка при линковете не спира писмото, но се отбелязва и записва", async () => {
+  for (const opts of [{ signError: true }, { photosError: true }]) {
+    const { deps, sent, rpcCalls } = setup({ dispatchIds: [5], photos: ["reports/r/1.jpg"], ...opts });
+    const res = await handle(post(SECRET), deps);
+    assertEquals((await res.json()).dispatches, { sent: 1, failed: 0 });
+    assert(sent[0].text.includes("линковете към тях не можаха"));
+    assert(rpcCalls.some((c) => c.name === "log_system_event" && c.args.p_level === "warning"));
+  }
 });

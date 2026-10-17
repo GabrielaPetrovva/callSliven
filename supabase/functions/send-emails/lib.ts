@@ -45,7 +45,9 @@ export interface DispatchPayload {
   out_created_at: string;
 }
 
-export function dispatchMail(p: DispatchPayload, siteUrl?: string): Mail {
+export const PHOTO_LINK_DAYS = 7;
+
+export function dispatchMail(p: DispatchPayload, siteUrl?: string, photoUrls: string[] = [], photosUnavailable = false): Mail {
   const n = p.out_number;
   const prefix = (p.out_is_demo ? "[ДЕМО] " : "") + (p.out_attempt > 1 ? "Повторно: " : "");
   const subject = `${prefix}Сигнал №${n} от гражданин: ${p.out_title}`.slice(0, 200);
@@ -73,6 +75,11 @@ export function dispatchMail(p: DispatchPayload, siteUrl?: string): Mail {
     `Карта: ${osm}`,
   );
   if (link) lines.push(`Публична страница на сигнала: ${link}`);
+  if (photoUrls.length > 0) {
+    lines.push("", `Снимки (линковете важат ${PHOTO_LINK_DAYS} дни):`, ...photoUrls.map((u, i) => `${i + 1}. ${u}`));
+  } else if (photosUnavailable) {
+    lines.push("", "Към сигнала има снимки, но линковете към тях не можаха да бъдат създадени. Моля, поискайте ги от администратора.");
+  }
   const text = lines.filter((l, i, a) => !(l === "" && a[i - 1] === "")).join("\n");
 
   const html = wrap(
@@ -87,7 +94,13 @@ export function dispatchMail(p: DispatchPayload, siteUrl?: string): Mail {
       `<p><strong>Адрес:</strong> ${esc(p.out_address ?? "не е определен автоматично")}<br>` +
       `<strong>Координати:</strong> ${p.out_lat.toFixed(6)}, ${p.out_lng.toFixed(6)}<br>` +
       `<a href="${esc(osm)}">Покажи на картата</a>` +
-      (link ? `<br><a href="${esc(link)}">Публична страница на сигнала</a>` : "") + `</p>`,
+      (link ? `<br><a href="${esc(link)}">Публична страница на сигнала</a>` : "") + `</p>` +
+      (photoUrls.length > 0
+        ? `<p><strong>Снимки</strong> (линковете важат ${PHOTO_LINK_DAYS} дни):<br>` +
+          photoUrls.map((u, i) => `<a href="${esc(u)}">Снимка ${i + 1}</a>`).join("<br>") + `</p>`
+        : photosUnavailable
+        ? `<p><em>Към сигнала има снимки, но линковете към тях не можаха да бъдат създадени. Моля, поискайте ги от администратора.</em></p>`
+        : ""),
   );
   return { subject, text, html };
 }

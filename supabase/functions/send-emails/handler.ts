@@ -1,6 +1,6 @@
 // handler.ts — изпразва опашките за писма: към институции (report_dispatches) и към потребители (email_outbox).
 // Вика се на всяка минута от pg_cron през pg_net. Достъпът е със споделена тайна, не с потребителски токен.
-import { type DispatchPayload, dispatchMail, type Mail, type OutboxPayload, outboxMail, safeEqual } from "./lib.ts";
+import { type DispatchPayload, dispatchMail, type Mail, type OutboxPayload, outboxMail, PHOTO_LINK_DAYS, safeEqual } from "./lib.ts";
 
 // deno-lint-ignore no-explicit-any
 type Rpc = (name: string, args: Record<string, unknown>) => PromiseLike<{ data: any; error: { message: string } | null }>;
@@ -9,6 +9,7 @@ export interface Deps {
   fetch: typeof fetch;
   rpc: Rpc;
   sleep: (ms: number) => Promise<void>;
+  signedUrls: (paths: string[], expiresInSeconds: number) => PromiseLike<{ urls: string[] | null; error: { message: string } | null }>;
 }
 
 const BATCH = 10;
@@ -55,6 +56,23 @@ async function logSystem(deps: Deps, level: "warning" | "error", message: string
   } catch { /* журналът не бива да чупи работата */ }
 }
 
+// Временни линкове към снимките. Ако не станат, писмото пак тръгва, но с бележка и запис в журнала.
+async function photoLinks(deps: Deps, dispatchId: number): Promise<{ urls: string[]; unavailable: boolean }> {
+  const { data, error } = await deps.rpc("dispatch_get_photos", { p_dispatch_id: dispatchId });
+  if (error) {
+    await logSystem(deps, "warning", `dispatch_get_photos (${dispatchId}): ${error.message}`);
+    return { urls: [], unavailable: true };
+  }
+  const paths = ((data ?? []) as { out_path: string }[]).map((r) => r.out_path);
+  if (paths.length === 0) return { urls: [], unavailable: false };
+  const signed = await deps.signedUrls(paths, PHOTO_LINK_DAYS * 24 * 3600);
+  if (signed.error || !signed.urls || signed.urls.length !== paths.length) {
+    await logSystem(deps, "warning", `подписани линкове (${dispatchId}): ${signed.error?.message ?? "непълен отговор"}`);
+    return { urls: [], unavailable: true };
+  }
+  return { urls: signed.urls, unavailable: false };
+}
+
 async function processDispatches(deps: Deps) {
   const r = { sent: 0, failed: 0 };
   const { data: claimed, error } = await deps.rpc("dispatch_claim", { p_limit: BATCH });
@@ -66,7 +84,8 @@ async function processDispatches(deps: Deps) {
       const p = (Array.isArray(data) ? data[0] : data) as DispatchPayload | undefined;
       if (perr || !p) throw new Error(perr?.message ?? "няма данни за писмото");
       if (!p.out_to_email) throw new Error("липсва получател");
-      const res = await sendViaResend(deps, p.out_to_email, dispatchMail(p, deps.env("SITE_URL")), `dispatch-${id}`);
+      const photos = await photoLinks(deps, id);
+      const res = await sendViaResend(deps, p.out_to_email, dispatchMail(p, deps.env("SITE_URL"), photos.urls, photos.unavailable), `dispatch-${id}`);
       if (res.ok) {
         await deps.rpc("dispatch_mark_result", { p_dispatch_id: id, p_status: "sent", p_provider_message_id: res.id });
         r.sent++;

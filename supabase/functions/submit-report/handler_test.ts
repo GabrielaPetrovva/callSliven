@@ -20,6 +20,8 @@ function setup(opts: {
   replay?: boolean;
   files?: Record<string, Uint8Array>;
   uploadFails?: boolean;
+  ipCount?: number | null;
+  ipError?: boolean;
 } = {}) {
   const calls: Calls = { rpc: [], fetchUrls: [], uploads: [], removed: [] };
   const env: Record<string, string | undefined> = {
@@ -47,6 +49,10 @@ function setup(opts: {
         if (name === "create_report") {
           if (opts.rpcError) return Promise.resolve({ data: null, error: { message: opts.rpcError } });
           return Promise.resolve({ data: [{ out_report_id: "r-1", out_number: 42, out_status: "new", out_needs_review: (args.p_suspicious_reasons as string[]).length > 0 }], error: null });
+        }
+        if (name === "ip_recent_report_count") {
+          if (opts.ipError) return Promise.resolve({ data: null, error: { message: "boom" } });
+          return Promise.resolve({ data: opts.ipCount ?? 0, error: null });
         }
         return Promise.resolve({ data: null, error: null });
       },
@@ -212,6 +218,13 @@ Deno.test("пречистване на личните данни", () => {
     ["Дупка на ул. Хаджи Димитър 12, вх. 3", "Дупка на ул. Хаджи Димитър 12, вх. 3", []],
     ["Сигнал за 25 кв.м. и 3 дървета", "Сигнал за 25 кв.м. и 3 дървета", []],
     ["Номер 2026-10-16 е дата", "Номер 2026-10-16 е дата", []],
+    ["Колата СА 1234 АВ е на пътя", "Колата [рег. номер] е на пътя", ["plate"]],
+    ["паркирана ВТ0001ВТ пред входа", "паркирана [рег. номер] пред входа", ["plate"]],
+    ["автомобил CH 5678 PK и ОВ-1234-ТХ", "автомобил [рег. номер] и [рег. номер]", ["plate"]],
+    ["дупката е на 1000 м от блока", "дупката е на 1000 м от блока", []],
+    ["на 1000 м. има светофар", "на 1000 м. има светофар", []],
+    ["има 3 дървета и 2500 кв.м. площ", "има 3 дървета и 2500 кв.м. площ", []],
+    ["блок 12, вх. А 1234 нататък", "блок 12, вх. А 1234 нататък", []],
   ];
   for (const [inp, out, reasons] of cases) {
     const r = sanitize(inp);
@@ -313,4 +326,35 @@ Deno.test("повторно изпращане със същия ключ връ
   assertEquals(await res.json(), { number: 7, status: "new", needs_review: false, replay: true });
   assert(calls.fetchUrls.length === 0);
   assert(!calls.rpc.some((c) => c.name === "create_report"));
+});
+
+Deno.test("лимит по IP: под прага нищо, над първия праг - преглед, над втория - отказ", async () => {
+  const run = async (ipCount: number) => {
+    const { deps, calls } = setup({ ipCount });
+    const res = await handle(req(good), deps);
+    return { res, calls };
+  };
+  const a = await run(5);
+  assertEquals(a.res.status, 201);
+  assertEquals((await a.res.json()).needs_review, false);
+  assertEquals(a.calls.rpc.find((c) => c.name === "create_report")!.args.p_suspicious_reasons, []);
+
+  const b = await run(6);
+  assertEquals(b.res.status, 201);
+  assertEquals((await b.res.json()).needs_review, true);
+  assertEquals(b.calls.rpc.find((c) => c.name === "create_report")!.args.p_suspicious_reasons, ["ip_burst"]);
+
+  const c = await run(15);
+  assertEquals(c.res.status, 429);
+  assertEquals((await c.res.json()).code, "ip_limited");
+  assert(!c.calls.rpc.some((x) => x.name === "create_report"));
+  assert(c.calls.rpc.some((x) => x.name === "log_security_event" && x.args.p_type === "ip_limited"));
+});
+
+Deno.test("лимит по IP: прагът се сменя от настройка; грешка в проверката не спира подаването", async () => {
+  const { deps } = setup({ ipCount: 3, env: { IP_BLOCK_AT: "3" } });
+  assertEquals((await handle(req(good), deps)).status, 429);
+  const { deps: d2, calls } = setup({ ipError: true });
+  assertEquals((await handle(req(good), d2)).status, 201);
+  assert(calls.rpc.some((c) => c.name === "log_system_event" && c.args.p_level === "warning"));
 });

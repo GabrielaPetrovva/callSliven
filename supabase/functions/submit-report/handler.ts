@@ -217,6 +217,21 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
     }
     if (captcha === "unavailable") return json(503, { code: "captcha_unavailable" }, cors);
 
+    // 4а) Мек лимит по IP: много сигнали от една мрежа отиват за преглед, а при още повече се отказват временно
+    const flagAt = Number(deps.env("IP_FLAG_AT") ?? 6);
+    const blockAt = Number(deps.env("IP_BLOCK_AT") ?? 15);
+    let ipBurst = false;
+    const ipc = await deps.admin.rpc("ip_recent_report_count", { p_ip_hash: ipHash });
+    if (ipc.error) {
+      await logSystem(deps, "warning", `ip_recent_report_count: ${ipc.error.message}`);
+    } else if (typeof ipc.data === "number") {
+      if (ipc.data >= blockAt) {
+        await logSecurity(deps, "ip_limited", userId, ipHash);
+        return json(429, { code: "ip_limited" }, cors);
+      }
+      ipBurst = ipc.data >= flagAt;
+    }
+
     // 4б) Снимките се проверяват преди сигналът да бъде създаден
     let photos: Processed[] = [];
     if (input.photoPaths.length > 0) {
@@ -248,7 +263,7 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
       p_public_address: publicAddress,
       p_exact_address: exactAddress,
       p_ip_hash: ipHash,
-      p_suspicious_reasons: pub.reasons,
+      p_suspicious_reasons: ipBurst ? [...pub.reasons, "ip_burst"] : pub.reasons,
       p_photo_count: photos.length,
     });
     if (error) {

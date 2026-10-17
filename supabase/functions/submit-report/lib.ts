@@ -108,6 +108,14 @@ export function validateInput(body: unknown): Validation {
 const EMAIL_RE = /[\p{L}\d._%+-]+@[\p{L}\d-]+(?:\.[\p{L}\d-]+)+/giu;
 const URL_RE = /\b(?:https?:\/\/|www\.)\S+/giu;
 const BARE_DOMAIN_RE = /\b[\p{L}\d-]+(?:\.[\p{L}\d-]+)*\.(?:com|net|org|info|xyz|ru|eu|bg|io|me|tk|top)\b(?:\/\S*)?/giu;
+// Български регистрационен номер: 1-2 букви за областта, 4 цифри, 2 букви (СА 1234 АВ). Допускат се и латински букви,
+// както и кирилица и латиница, които си приличат. Нарочно изискваме 4 цифри и 2 буквени знака накрая, иначе
+// обикновени думи като "на 1000 м" биха се смятали за номер.
+const PLATE_LETTERS = "ABEKMHOPCTYXАВЕКМНОРСТУХ";
+const PLATE_RE = new RegExp(
+  `(?<![\\p{L}\\d])[${PLATE_LETTERS}]{1,2}[ \\t-]?\\d{4}[ \\t-]?[${PLATE_LETTERS}]{2}(?![\\p{L}\\d])`,
+  "giu",
+);
 // 9 или повече цифри, евентуално с интервали, тирета, точки или скоби: телефони и ЕГН
 const NUMBER_RE = /(?:\+|00)?\d(?:[\s\-.()]?\d){8,}/g;
 
@@ -123,6 +131,7 @@ export function sanitize(input: string): Sanitized {
   t = t.replace(EMAIL_RE, () => { reasons.add("email"); return "[имейл]"; });
   t = t.replace(URL_RE, () => { reasons.add("url"); return "[връзка]"; });
   t = t.replace(BARE_DOMAIN_RE, () => { reasons.add("url"); return "[връзка]"; });
+  t = t.replace(PLATE_RE, () => { reasons.add("plate"); return "[рег. номер]"; });
   t = t.replace(NUMBER_RE, () => { reasons.add("phone_or_id"); return "[номер]"; });
 
   const letters = t.replace(/[^\p{L}]/gu, "");

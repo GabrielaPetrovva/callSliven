@@ -14,5 +14,11 @@ Deno.serve((req) =>
     fetch,
     rpc: (name, args) => admin.rpc(name, args),
     sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
+    signedUrls: async (paths, expiresIn) => {
+      const { data, error } = await admin.storage.from("report-photos").createSignedUrls(paths, expiresIn);
+      if (error || !data) return { urls: null, error: { message: error?.message ?? "няма данни" } };
+      const urls = data.map((d) => d.signedUrl).filter((u): u is string => !!u);
+      return { urls, error: null };
+    },
   })
 );
