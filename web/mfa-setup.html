@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Втори фактор · CallSliven</title>
+<!--
+  CallSliven — second factor (TOTP) setup for administrators and Super Admins (ADM-1).
+  auth.html sends staff here when they log in without a factor. Admin tables open only at aal2 (is_staff()).
+-->
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/auth.css">
+<link rel="stylesheet" href="css/pages.css">
+</head>
+<body class="sec-page">
+
+<header class="sec-top">
+  <a class="brand" href="index.html">
+    <span class="crest"><svg viewBox="0 0 36 44" fill="none"><path d="M3 4h30v17c0 10.5-6.6 17.2-15 20C9.6 38.2 3 31.5 3 21V4z" fill="#1F7A3A" stroke="#CDE9D2" stroke-width="1.6"/><path d="M9 25l5-7 4 4 3-5 6 8" stroke="#fff" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg><img src="assets/gerb.png" alt=""></span>
+    <span class="brand-name">Call<em>Sliven</em></span>
+  </a>
+  <div class="sec-top-r">
+    <button type="button" class="link" id="logout" data-i18n="logOut">Изход</button>
+    <div class="lang" role="group" aria-label="Language">
+      <button data-lang="bg" class="active" aria-pressed="true">BG</button>
+      <button data-lang="en" aria-pressed="false">EN</button>
+    </div>
+  </div>
+</header>
+
+<main class="sec">
+  <h1 data-i18n="pageTitle">Втори <em>фактор</em></h1>
+  <p class="lead" data-i18n="pageLead">Администраторският достъп изисква парола и код от приложение за удостоверяване.</p>
+
+  <section class="card" aria-labelledby="card-h">
+    <div class="card-head">
+      <span class="card-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.3 7.5 9.5 4.4-1.2 7.5-4.9 7.5-9.5V6L12 3z"/><path d="m8.8 12.2 2.2 2.2 4.3-4.4"/></svg></span>
+      <div>
+        <h2 id="card-h" data-i18n="cardTitle">Приложение за удостоверяване (TOTP)</h2>
+        <p class="card-sub" data-i18n="cardSub">Google Authenticator, Microsoft Authenticator, Authy или друго. Кодът се сменя на 30 секунди и работи без интернет.</p>
+      </div>
+    </div>
+
+    <div class="alert" id="alert" role="alert"><svg class="a-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><div class="alert-body"><span class="alert-text"></span></div></div>
+
+    <div class="pane" data-pane="loading"><div class="skeleton"></div><div class="skeleton short"></div></div>
+
+    <div class="pane" data-pane="enroll" hidden>
+      <div class="scan">
+        <div class="qr-box"><img id="qr" alt="QR"></div>
+        <div class="scan-text">
+          <ol class="howto">
+            <li data-i18n="how1">Отвори приложението и избери „Добави“ (+).</li>
+            <li data-i18n="how2">Сканирай QR кода.</li>
+            <li data-i18n="how3">Въведи 6-цифрения код, който приложението показва.</li>
+          </ol>
+          <p class="label" data-i18n="cantScan">Не можеш да сканираш? Въведи ключа ръчно:</p>
+          <div class="secret"><code id="secret"></code><button type="button" class="copy" id="copy" data-i18n="copy">Копирай</button></div>
+        </div>
+      </div>
+      <form id="form-enroll" novalidate autocomplete="off">
+        <div class="field" id="code-field">
+          <span class="label" id="code-label" data-i18n="codeLabel">Код от приложението</span>
+          <div data-otp aria-labelledby="code-label"></div>
+          <p class="err" aria-live="polite"></p>
+        </div>
+        <div class="actions">
+          <button class="btn btn-auto" type="submit"><span class="spin" aria-hidden="true"></span><span class="btn-text" data-i18n="verifyBtn">Потвърди</span></button>
+        </div>
+      </form>
+      <p class="hint" data-i18n="lostNote">Ако смениш или загубиш телефона, Super Admin нулира втория фактор и го настройваш отново.</p>
+    </div>
+
+    <div class="pane" data-pane="done" hidden>
+      <p class="pane-text" id="done-text" data-i18n="doneText">Вторият фактор е настроен. При всеки вход ще въвеждаш и код от приложението.</p>
+      <div class="actions"><a class="btn btn-auto" href="admin.html" id="to-admin"><span class="btn-text" data-i18n="toAdmin">Към админ панела</span></a></div>
+    </div>
+
+    <div class="pane" data-pane="denied" hidden>
+      <p class="pane-text" data-i18n="deniedText">Тази страница е само за администратори.</p>
+      <div class="actions"><a class="btn btn-auto" href="index.html"><span class="btn-text" data-i18n="toHome">Към началото</span></a></div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="vendor/supabase-js-2.118.0/supabase.js"></script>
+<script src="js/config.js"></script>
+<script src="js/sb.js"></script>
+<script src="js/otp.js"></script>
+<script src="js/mfa-setup.js"></script>
+</body>
+</html>

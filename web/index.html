@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CallSliven · Reports for Sliven Municipality</title>
+<meta name="description" content="Report everyday problems in Sliven and follow how they get fixed.">
+<link rel="stylesheet" href="css/fonts.css">
+<!--
+  CallSliven — home page. Styles: css/base.css + css/home.css. Scripts: js/common.js, js/data.js, js/home.js.
+  Photos (picked up automatically from assets/): gerb.png, slide-1.jpg, slide-2.jpg, slide-3.jpg, why-bg.jpg
+-->
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/home.css">
+</head>
+<body>
+
+<a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+
+<!-- ═════════ Navigation ═════════ -->
+<header class="navbar" id="navbar">
+  <nav class="nav-inner" aria-label="Main">
+    <a class="brand" href="index.html" aria-label="CallSliven – home">
+      <span class="crest" aria-hidden="true">
+        <svg viewBox="0 0 36 44" fill="none"><path d="M3 4h30v17c0 10.5-6.6 17.2-15 20C9.6 38.2 3 31.5 3 21V4z" fill="#1F6B34" stroke="#BFDB8C" stroke-width="1.6"/><path d="M9 25l5-7 4 4 3-5 6 8" stroke="#EEF3EA" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg>
+        <img src="assets/gerb.png" alt="">
+      </span>
+      <span class="brand-text">
+        <span class="brand-name">Call<em>Sliven</em></span>
+        <span class="brand-sub" data-i18n="brandSub">Reports for Sliven Municipality</span>
+      </span>
+    </a>
+
+    <ul class="nav-links" id="nav-links">
+      <li><a href="reports.html" data-i18n="navReports">Reports</a></li>
+      <li><a href="letters.html" data-i18n="navLetters">Letters, complaints, FOI</a></li>
+      <li><a href="help.html" data-i18n="navHelp">Help</a></li>
+    </ul>
+
+    <div class="nav-right">
+      <div class="lang" role="group" aria-label="Language">
+        <button id="lang-en" class="active" data-lang="en" aria-pressed="true">EN</button>
+        <button id="lang-bg" data-lang="bg" aria-pressed="false">BG</button>
+      </div>
+      <a class="login" href="auth.html#login">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span data-i18n="login">Log in</span>
+      </a>
+      <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+</header>
+
+<main id="main">
+
+<!-- ═════════ Hero ═════════ -->
+<section class="hero" id="top" aria-labelledby="hero-title">
+  <div class="slides" id="slides">
+    <!-- slide 1: Sliven from above -->
+    <div class="slide active" data-cap="cap1">
+      <svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+          <linearGradient id="sk1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4F8A63"/><stop offset=".55" stop-color="#7DB38A"/><stop offset="1" stop-color="#0D2015"/></linearGradient>
+          <radialGradient id="sun1" cx=".7" cy=".42" r=".35"><stop offset="0" stop-color="#E9F3C9" stop-opacity=".55"/><stop offset="1" stop-color="#E9F3C9" stop-opacity="0"/></radialGradient>
+        </defs>
+        <rect width="1600" height="900" fill="url(#sk1)"/><rect width="1600" height="900" fill="url(#sun1)"/>
+        <path d="M0 470 L140 420 L260 445 L400 360 L520 400 L640 330 L760 380 L900 320 L1040 375 L1180 340 L1320 395 L1460 360 L1600 400 V900 H0Z" fill="#4E8560"/>
+        <path d="M0 560 L180 520 L360 545 L560 500 L760 540 L960 505 L1160 545 L1380 512 L1600 535 V900 H0Z" fill="#3C6E4C"/>
+        <g fill="#2D553A">
+          <rect x="120" y="610" width="70" height="120"/><rect x="200" y="640" width="54" height="90"/><rect x="270" y="590" width="90" height="140"/><rect x="380" y="630" width="60" height="100"/>
+          <rect x="980" y="600" width="80" height="130"/><rect x="1075" y="630" width="58" height="100"/><rect x="1150" y="585" width="96" height="145"/><rect x="1260" y="625" width="64" height="105"/><rect x="1340" y="605" width="80" height="125"/>
+          <path d="M0 700 H1600 V900 H0Z"/>
+        </g>
+        <g fill="#E9F3C9" opacity=".55"><rect x="140" y="640" width="6" height="8"/><rect x="290" y="620" width="6" height="8"/><rect x="320" y="660" width="6" height="8"/><rect x="1000" y="630" width="6" height="8"/><rect x="1170" y="615" width="6" height="8"/><rect x="1200" y="650" width="6" height="8"/><rect x="1360" y="640" width="6" height="8"/></g>
+      </svg>
+      <img src="assets/slide-1.jpg" alt="">
+    </div>
+    <!-- slide 2: the Blue Rocks -->
+    <div class="slide" data-cap="cap2">
+      <svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs><linearGradient id="sk2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5A8F84"/><stop offset=".6" stop-color="#8DBCA9"/><stop offset="1" stop-color="#2E5E3D"/></linearGradient></defs>
+        <rect width="1600" height="900" fill="url(#sk2)"/>
+        <path d="M0 520 L200 470 L380 500 L560 440 L760 480 L980 430 L1200 470 L1400 440 L1600 470 V900 H0Z" fill="#5C8C7A" opacity=".8"/>
+        <path d="M520 900 L560 560 L600 600 L640 430 L690 520 L730 380 L780 480 L820 410 L870 540 L900 470 L950 900Z" fill="#3F6A5E"/>
+        <path d="M980 900 L1010 600 L1050 640 L1090 520 L1130 600 L1170 560 L1220 900Z" fill="#365C51"/>
+        <path d="M0 660 L220 620 L420 650 L640 610 L900 650 L1120 615 L1360 650 L1600 625 V900 H0Z" fill="#3A6A4A"/>
+        <path d="M0 760 L300 735 L620 755 L960 730 L1280 752 L1600 738 V900 H0Z" fill="#0D2015"/>
+      </svg>
+      <img src="assets/slide-2.jpg" alt="">
+    </div>
+    <!-- slide 3: the city centre at dusk -->
+    <div class="slide" data-cap="cap3">
+      <svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+          <linearGradient id="sk3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4B7F5B"/><stop offset=".6" stop-color="#86B48C"/><stop offset="1" stop-color="#2C5238"/></linearGradient>
+          <radialGradient id="glow3" cx=".5" cy=".75" r=".5"><stop offset="0" stop-color="#D9E9A8" stop-opacity=".35"/><stop offset="1" stop-color="#D9E9A8" stop-opacity="0"/></radialGradient>
+        </defs>
+        <rect width="1600" height="900" fill="url(#sk3)"/>
+        <path d="M0 430 L180 380 L340 410 L520 330 L700 380 L880 320 L1060 370 L1240 335 L1420 385 L1600 350 V900 H0Z" fill="#4D8160"/>
+        <rect width="1600" height="900" fill="url(#glow3)"/>
+        <g fill="#2A4C35">
+          <rect x="80" y="560" width="120" height="340"/><rect x="215" y="600" width="90" height="300"/><rect x="320" y="520" width="140" height="380"/><rect x="475" y="590" width="100" height="310"/>
+          <rect x="1020" y="580" width="110" height="320"/><rect x="1145" y="520" width="150" height="380"/><rect x="1310" y="600" width="90" height="300"/><rect x="1415" y="555" width="130" height="345"/>
+          <path d="M640 900 V640 L800 560 L960 640 V900Z"/>
+        </g>
+        <g fill="#E9F3C9" opacity=".6">
+          <rect x="100" y="590" width="10" height="12"/><rect x="140" y="630" width="10" height="12"/><rect x="350" y="560" width="10" height="12"/><rect x="390" y="610" width="10" height="12"/><rect x="420" y="660" width="10" height="12"/><rect x="500" y="630" width="10" height="12"/>
+          <rect x="1050" y="620" width="10" height="12"/><rect x="1170" y="560" width="10" height="12"/><rect x="1230" y="610" width="10" height="12"/><rect x="1260" y="670" width="10" height="12"/><rect x="1440" y="600" width="10" height="12"/><rect x="1490" y="650" width="10" height="12"/>
+          <rect x="785" y="610" width="30" height="40" rx="15"/>
+        </g>
+      </svg>
+      <img src="assets/slide-3.jpg" alt="">
+    </div>
+  </div>
+  <div class="hero-overlay"></div>
+
+  <div class="hero-content intro">
+    <h1 id="hero-title" data-i18n="heroTitle">Your city, <em>your voice</em></h1>
+    <p class="hero-lead" data-i18n="heroLead">Spotted a pothole, a fallen branch or an illegal dump? Report it and follow how it gets fixed.</p>
+
+    <form class="search" role="search" action="reports.html" method="get">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+      <label for="q" class="sr-only" data-i18n="searchLabel">Search reports</label>
+      <input id="q" name="q" type="search" autocomplete="off" placeholder="Search reports by street or keyword" data-i18n-ph="searchPh">
+      <button type="submit" data-i18n="searchBtn">Search</button>
+    </form>
+
+    <ul class="chips" aria-label="Categories">
+      <li><button class="chip" data-cat="roads" aria-pressed="false"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 21M16 3l4 18M12 4v2M12 10v3M12 17v3"/></svg></span><span data-i18n="cRoads">Roads</span></button></li>
+      <li><button class="chip" data-cat="utilities" aria-pressed="false"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></span><span data-i18n="cUtil">Utilities</span></button></li>
+      <li><button class="chip" data-cat="environment" aria-pressed="false"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 4 13c0-6 7-10 16-10 0 9-4 16-10 16"/><path d="M4 21c3-5 6-8 11-11"/></svg></span><span data-i18n="cEnv">Environment</span></button></li>
+      <li><button class="chip" data-cat="animals" aria-pressed="false"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="10" r="2"/><circle cx="9" cy="5" r="2"/><circle cx="15" cy="5" r="2"/><circle cx="19" cy="10" r="2"/><path d="M12 11c-3 0-6 4-6 7 0 2 2 3 3.5 2.5 1-.3 1.6-.8 2.5-.8s1.5.5 2.5.8C16 21 18 20 18 18c0-3-3-7-6-7z"/></svg></span><span data-i18n="cAnimals">Animals</span></button></li>
+      <li><button class="chip" data-cat="construction" aria-pressed="false"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V8l6-4 6 4v13M10 21v-5h4v5M10 11h4"/></svg></span><span data-i18n="cBuild">Construction</span></button></li>
+      <li><button class="chip" data-cat="transport" aria-pressed="false"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="15" rx="3"/><path d="M4 11h16M8 21l1-3M16 21l-1-3"/><circle cx="8" cy="14.5" r=".8"/><circle cx="16" cy="14.5" r=".8"/></svg></span><span data-i18n="cTransport">Transport and order</span></button></li>
+      <li><button class="chip" data-cat="safety" aria-pressed="false"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.4 8.3 8 9 4.6-.7 8-4 8-9V6z"/><path d="M12 8v5M12 16h.01"/></svg></span><span data-i18n="cSafety">Safety</span></button></li>
+      <li><button class="chip" data-cat="health" aria-pressed="false"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7z"/><path d="M12 9v6M9 12h6"/></svg></span><span data-i18n="cHealth">Health and hygiene</span></button></li>
+      <li><button class="chip" data-cat="other" aria-pressed="false"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg></span><span data-i18n="cOther">Other</span></button></li>
+    </ul>
+
+    <div class="hero-actions">
+      <a class="btn btn-accent btn-glow" href="auth.html?next=submit.html#login"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="ctaSubmit">Submit a report</span></a>
+    </div>
+  </div>
+
+  <div class="hero-controls">
+    <div class="dots" id="hero-dots"></div>
+  </div>
+</section>
+
+<!-- ═════════ How it works ═════════ -->
+<section class="block bg-a glow" id="how" aria-labelledby="how-title">
+  <div class="wrap">
+    <div class="section-head center reveal">
+      <span class="eyebrow" data-i18n="howEyebrow">How it works</span>
+      <h2 id="how-title" data-i18n="howTitle">Four steps to <em>a better street</em></h2>
+      <p data-i18n="howLead">You don't need to know which institution is responsible. We take it from there.</p>
+    </div>
+    <ol class="steps stagger">
+      <li class="step">
+        <span class="step-num" aria-hidden="true">1</span>
+        <span class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="4"/><path d="M3 21c0-4 3-7 7-7 1.6 0 3 .4 4.2 1.2M18 15v6M15 18h6"/></svg></span>
+        <h3 data-i18n="s1t">Register</h3>
+        <p data-i18n="s1d">Create a profile and confirm your email.</p>
+      </li>
+      <li class="step">
+        <span class="step-num" aria-hidden="true">2</span>
+        <span class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg></span>
+        <h3 data-i18n="s2t">Submit a report</h3>
+        <p data-i18n="s2d">Describe the problem, mark it on the map and add photos.</p>
+      </li>
+      <li class="step">
+        <span class="step-num" aria-hidden="true">3</span>
+        <span class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3 10 14"/><path d="M21 3 14.5 21l-4.5-7-7-4.5z"/></svg></span>
+        <h3 data-i18n="s3t">We forward it</h3>
+        <p data-i18n="s3d">An administrator reviews the report and sends it to the responsible institution.</p>
+      </li>
+      <li class="step">
+        <span class="step-num" aria-hidden="true">4</span>
+        <span class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span>
+        <h3 data-i18n="s4t">Track the status</h3>
+        <p data-i18n="s4d">Every change is public until the problem is resolved.</p>
+        <span class="status st-new" id="status"><span class="s-dot"></span><span class="s-text">New</span></span>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- ═════════ Why report ═════════ -->
+<section class="block why-section" id="why" aria-labelledby="why-title">
+  <div class="why-bg" id="why-bg" aria-hidden="true">
+    <!-- illustrated Blue Rocks until assets/why-bg.jpg exists -->
+    <svg class="scene" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id="wsk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8DBBA8"/><stop offset=".55" stop-color="#C2DFD2"/><stop offset="1" stop-color="#6E9C7E"/></linearGradient>
+        <radialGradient id="wsun" cx=".78" cy=".3" r=".4"><stop offset="0" stop-color="#E9F3C9" stop-opacity=".45"/><stop offset="1" stop-color="#E9F3C9" stop-opacity="0"/></radialGradient>
+      </defs>
+      <rect width="1600" height="1000" fill="url(#wsk)"/><rect width="1600" height="1000" fill="url(#wsun)"/>
+      <path d="M0 560 L200 510 L380 540 L560 480 L760 520 L980 470 L1200 510 L1400 480 L1600 510 V1000 H0Z" fill="#7FAE98" opacity=".8"/>
+      <path d="M980 1000 L1020 600 L1060 640 L1100 450 L1150 560 L1190 400 L1240 520 L1280 430 L1330 580 L1360 500 L1410 1000Z" fill="#5F8F80"/>
+      <path d="M1420 1000 L1450 640 L1490 680 L1530 560 L1570 640 L1600 610 V1000Z" fill="#557F72"/>
+      <path d="M0 720 L220 680 L420 710 L640 670 L900 710 L1120 675 L1360 710 L1600 685 V1000 H0Z" fill="#5E9270"/>
+      <path d="M0 830 L300 805 L620 825 L960 800 L1280 822 L1600 808 V1000 H0Z" fill="#6E9C7E"/>
+    </svg>
+    <img src="assets/why-bg.jpg" alt="">
+  </div>
+  <div class="why-shade" aria-hidden="true"></div>
+  <div class="wrap why">
+    <div class="section-head why-head reveal-left">
+      <span class="eyebrow" data-i18n="whyEyebrow">Why report</span>
+      <h2 id="why-title" data-i18n="whyTitle">One report <em>makes a difference</em></h2>
+      <p data-i18n="whyLead">It goes to the right people, and everyone can see what happens next.</p>
+    </div>
+    <div class="why-panel reveal-right">
+      <ul class="benefits">
+        <li class="benefit"><span class="b-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg></span>
+          <div><h3 data-i18n="b1t">Reaches the right institution</h3><p data-i18n="b1d">The Municipality, ViK, EVN, RIOSV and others. You don't need to know who is responsible.</p></div></li>
+        <li class="benefit"><span class="b-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span>
+          <div><h3 data-i18n="b2t">Transparent for everyone</h3><p data-i18n="b2d">Reports and their status are public.</p></div></li>
+        <li class="benefit"><span class="b-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.4 8.3 8 9 4.6-.7 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></span>
+          <div><h3 data-i18n="b3t">Your personal data is protected</h3><p data-i18n="b3d">Your name, email, phone and photos are not published, and the location is shown only approximately.</p></div></li>
+        <li class="benefit"><span class="b-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></span>
+          <div><h3 data-i18n="b4t">No paperwork or queues</h3><p data-i18n="b4d">Report from your phone, wherever you see the problem, at any time.</p></div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ Latest reports (carousel) ═════════ -->
+<section class="block bg-c glow" id="reports" aria-labelledby="rep-title">
+  <div class="wrap">
+    <div class="section-head center reveal">
+      <span class="eyebrow" data-i18n="repEyebrow">Latest reports</span>
+      <h2 id="rep-title" data-i18n="repTitle">What's happening <em>in the city</em></h2>
+    </div>
+
+    <div class="carousel reveal" id="carousel" aria-roledescription="carousel">
+      <div class="viewport">
+        <div class="track" id="track"></div>
+      </div>
+      <div class="carousel-nav">
+        <button class="arrow" id="rep-prev" aria-label="Previous report"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="dots" id="rep-dots"></div>
+        <button class="arrow" id="rep-next" aria-label="Next report"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+      </div>
+      <p class="all-link"><a class="btn btn-accent" href="reports.html"><span data-i18n="allReports">See all reports</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a></p>
+      <p class="sample-note" data-i18n="sample">Sample data for the prototype</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ FAQ ═════════ -->
+<section class="block bg-d" id="faq" aria-labelledby="faq-title">
+  <div class="wrap">
+    <div class="section-head center reveal">
+      <span class="eyebrow" data-i18n="faqEyebrow">FAQ</span>
+      <h2 id="faq-title" data-i18n="faqTitle">Frequently asked <em>questions</em></h2>
+    </div>
+    <ul class="faq reveal">
+      <li class="faq-item"><button class="faq-question" aria-expanded="false"><span data-i18n="q1">Do I need to register?</span><span class="plus" aria-hidden="true"></span></button>
+        <div class="faq-answer"><div><p data-i18n="a1">Yes. To submit a report you need a profile with a confirmed email. Browsing and searching reports is open to everyone.</p></div></div></li>
+      <li class="faq-item"><button class="faq-question" aria-expanded="false"><span data-i18n="q2">Is my personal information visible to others?</span><span class="plus" aria-hidden="true"></span></button>
+        <div class="faq-answer"><div><p data-i18n="a2">No. Your name, email, phone and photos stay private. The location of the problem is shown only approximately.</p></div></div></li>
+      <li class="faq-item"><button class="faq-question" aria-expanded="false"><span data-i18n="q3">How long does it take to resolve a report?</span><span class="plus" aria-hidden="true"></span></button>
+        <div class="faq-answer"><div><p data-i18n="a3">It depends on the problem and the responsible institution. You can follow every status change publicly until it's resolved.</p></div></div></li>
+      <li class="faq-item"><button class="faq-question" aria-expanded="false"><span data-i18n="q4">What happens if my report is rejected?</span><span class="plus" aria-hidden="true"></span></button>
+        <div class="faq-answer"><div><p data-i18n="a4">You get a notification with the reason, so you can correct it or submit it again.</p></div></div></li>
+      <li class="faq-item"><button class="faq-question" aria-expanded="false"><span data-i18n="q5">Which problems can I report?</span><span class="plus" aria-hidden="true"></span></button>
+        <div class="faq-answer"><div><p data-i18n="a5">Roads, street lighting, waste and illegal dumps, trees and green areas, water and sewage, and electricity.</p></div></div></li>
+      <li class="faq-item"><button class="faq-question" aria-expanded="false"><span data-i18n="q6">What should I do in an emergency?</span><span class="plus" aria-hidden="true"></span></button>
+        <div class="faq-answer"><div><p data-i18n="a6">Call 112. Gas leaks, fallen cables, fire and other immediate dangers can't be handled through the platform.</p></div></div></li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<!-- ═════════ Footer ═════════ -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <a class="brand" href="index.html" aria-label="CallSliven – home">
+          <span class="crest" aria-hidden="true">
+            <svg viewBox="0 0 36 44" fill="none"><path d="M3 4h30v17c0 10.5-6.6 17.2-15 20C9.6 38.2 3 31.5 3 21V4z" fill="#1F6B34" stroke="#BFDB8C" stroke-width="1.6"/><path d="M9 25l5-7 4 4 3-5 6 8" stroke="#EEF3EA" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg>
+            <img src="assets/gerb.png" alt="">
+          </span>
+          <span class="brand-text"><span class="brand-name">Call<em>Sliven</em></span></span>
+        </a>
+        <p class="footer-about" data-i18n="footAbout">Report everyday problems in Sliven and follow how they get fixed.</p>
+      </div>
+      <div>
+        <h4 data-i18n="footLinks">Quick links</h4>
+        <ul>
+          <li><a href="auth.html?next=submit.html#login" data-i18n="ctaSubmit">Submit a report</a></li>
+          <li><a href="reports.html" data-i18n="navReports">Reports</a></li>
+          <li><a href="letters.html" data-i18n="navLetters">Letters, complaints, FOI</a></li>
+          <li><a href="help.html" data-i18n="navHelp">Help</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 data-i18n="footLegal">Legal</h4>
+        <ul>
+          <li><a href="privacy.html" data-i18n="privacy">Privacy policy</a></li>
+          <li><a href="terms.html" data-i18n="terms">Terms of use</a></li>
+          <li><a href="privacy.html#storage" data-i18n="cookies">Cookies</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 data-i18n="footContact">Contact</h4>
+        <address><span data-i18n="addr">Sliven Municipality<br>1 Tsar Osvoboditel Sq., 8800 Sliven</span><br><a href="mailto:contact@callsliven.bg">contact@callsliven.bg</a></address>
+        <a class="btn-112" href="tel:112"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg><span data-i18n="call112">Emergency? Call 112</span></a>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2026 CallSliven</div>
+  </div>
+</footer>
+
+<script src="js/common.js"></script>
+<script src="js/data.js"></script>
+<script src="js/home.js"></script>
+</body>
+</html>

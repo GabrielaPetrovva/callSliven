@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Политика за поверителност · CallSliven</title>
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/auth.css">
+<link rel="stylesheet" href="css/pages.css">
+<link rel="stylesheet" href="css/legal.css">
+</head>
+<body class="sec-page legal-page">
+
+<header class="sec-top">
+  <a class="brand" href="index.html">
+    <span class="crest"><svg viewBox="0 0 36 44" fill="none"><path d="M3 4h30v17c0 10.5-6.6 17.2-15 20C9.6 38.2 3 31.5 3 21V4z" fill="#1F7A3A" stroke="#CDE9D2" stroke-width="1.6"/><path d="M9 25l5-7 4 4 3-5 6 8" stroke="#fff" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg><img src="assets/gerb.png" alt=""></span>
+    <span class="brand-name">Call<em>Sliven</em></span>
+  </a>
+  <div class="sec-top-r">
+    <a class="back" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      <span>Към началото</span>
+    </a>
+  </div>
+</header>
+
+<main class="sec">
+  <h1>Политика за <em>поверителност</em></h1>
+  <div class="doc-meta"><span>Версия v1 (записва се при регистрация)</span><span>В сила от <mark class="todo">дд.мм.2026 г.</mark></span></div>
+  <div class="draft" role="note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+    <span>ЧЕРНОВА (MVP.md, раздел 6 „Преди реални потребители“) — текстът трябва да се одобри от юрист и длъжностното лице по защита на данните на Община Сливен. Жълтите полета са за попълване. Махни това поле преди публикуване.</span></div>
+  <nav class="toc" aria-label="Съдържание"><b>Съдържание</b><ol><li><a href="#admin">Кой обработва данните ти</a></li><li><a href="#data">Какви данни събираме</a></li><li><a href="#why">За какво и на какво основание</a></li><li><a href="#who">Кой вижда данните ти</a></li><li><a href="#public">Какво е публично</a></li><li><a href="#keep">Колко време пазим данните</a></li><li><a href="#rights">Твоите права</a></li><li><a href="#security">Как пазим данните</a></li><li><a href="#storage">Бисквитки и хранилище в браузъра</a></li><li><a href="#changes">Промени в политиката</a></li></ol></nav>
+
+  <article class="doc">
+    <h2 id="admin"><span class="n">1</span>Кой обработва данните ти</h2>
+    <p>Администратор на личните данни, събирани чрез CallSliven, е <strong>Община Сливен</strong>, <mark class="todo">ЕИК/БУЛСТАТ</mark>, <mark class="todo">адрес</mark>.</p>
+    <div class="doc-box"><p><strong>Длъжностно лице по защита на данните (ДЛЗД):</strong> <mark class="todo">име или длъжност</mark><br>Имейл: <mark class="todo">…</mark> · Телефон: <mark class="todo">…</mark></p></div>
+
+    <h2 id="data"><span class="n">2</span>Какви данни събираме</h2>
+    <table>
+      <thead><tr><th>Данни</th><th>Кога</th><th>Задължително?</th></tr></thead>
+      <tbody>
+        <tr><td>Имейл, име и фамилия</td><td>При регистрация</td><td>Да</td></tr>
+        <tr><td>Телефон</td><td>При регистрация или в профила</td><td>Не</td></tr>
+        <tr><td>Парола</td><td>При регистрация. Пази се само като хеш, никой не я вижда.</td><td>Да</td></tr>
+        <tr><td>Версия на тази политика и час на съгласието</td><td>При регистрация</td><td>Да</td></tr>
+        <tr><td>Сигнал: категория, заглавие, описание, местоположение, снимки</td><td>При подаване</td><td>Снимка — само при някои подкатегории</td></tr>
+        <tr><td>Технически данни: хеш на IP адреса, час на вход и действия, събития по сигурността</td><td>Автоматично</td><td>Да, за защита от злоупотреби</td></tr>
+      </tbody>
+    </table>
+    <p>Не събираме ЕГН. От снимките премахваме скритите данни (EXIF, вкл. GPS) на сървъра.</p>
+
+    <h2 id="why"><span class="n">3</span>За какво и на какво основание</h2>
+    <table>
+      <thead><tr><th>Цел</th><th>Основание (Регламент (ЕС) 2016/679)</th></tr></thead>
+      <tbody>
+        <tr><td>Приемане и разглеждане на сигнали, изпращане към отговорната институция, известия до теб</td><td>Задача от обществен интерес — чл. 6, ал. 1, б. „д“; <mark class="todo">конкретен закон — провери с юрист</mark></td></tr>
+        <tr><td>Профил и вход</td><td>Чл. 6, ал. 1, б. „д“</td></tr>
+        <tr><td>Телефон</td><td>Съгласие — чл. 6, ал. 1, б. „а“. Можеш да го изтриеш от профила си.</td></tr>
+        <tr><td>Защита от ботове, лимити, журнали за сигурност</td><td>Чл. 6, ал. 1, б. „д“ и чл. 32</td></tr>
+      </tbody>
+    </table>
+    <p>Не използваме данните за реклама и не ги продаваме.</p>
+
+    <h2 id="who"><span class="n">4</span>Кой вижда данните ти</h2>
+    <ul>
+      <li><strong>Администраторите</strong> на общината виждат сигнала (с оригиналния текст и точното място), снимките, името и фамилията ти. Не виждат имейла и телефона ти.</li>
+      <li><strong>Super Admin</strong> може да види имейла и телефона ти само ако се наложи да се свърже с теб, като всяко такова отваряне се записва заедно с причината.</li>
+      <li><strong>Институцията</strong>, отговорна за проблема, получава по имейл номера, категорията, заглавието, описанието без лични данни, точното място и временни линкове към снимките (важат 7 дни). Не получава името и контактите ти.</li>
+      <li><strong>Обработващи по договор</strong> с общината:
+        <ul>
+          <li>Supabase — база данни, вход и съхранение на файлове (<mark class="todo">регион на проекта</mark>);</li>
+          <li>Cloudflare — проверка срещу ботове (Turnstile);</li>
+          <li>Resend — изпращане на имейли;</li>
+          <li>Geoapify — търсене на адреси и карта;</li>
+          <li>Google Firebase — хостинг на сайта;</li>
+          <li><mark class="todo">OpenAI — само ако се включи препоръката за категория</mark>.</li>
+        </ul>
+        <mark class="todo">Опиши кои от тях предават данни извън ЕС/ЕИП и на какво основание (напр. стандартни договорни клаузи).</mark>
+      </li>
+    </ul>
+
+    <h2 id="public"><span class="n">5</span>Какво е публично</h2>
+    <p>На картата и в списъка със сигнали всеки вижда: <strong>номер, дата, статус, заглавие, описание, категория, приблизително място и хронологията</strong>.</p>
+    <ul>
+      <li>Описанието е пречистено: телефони, имейли, ЕГН, регистрационни номера и линкове се махат автоматично.</li>
+      <li>Мястото е закръглено до около 15 м, а адресът е без номер. При някои категории се показва само улицата или населеното място.</li>
+      <li><strong>Никога не са публични:</strong> името, имейлът и телефонът ти, снимките, приоритетът и вътрешните бележки.</li>
+      <li>Отхвърлени и оттеглени сигнали не се показват.</li>
+    </ul>
+
+    <h2 id="keep"><span class="n">6</span>Колко време пазим данните</h2>
+    <ul>
+      <li>Непотвърдена регистрация: изтрива се автоматично след 24 часа.</li>
+      <li>Журнали за сигурност и системни събития: 30 дни.</li>
+      <li>Одитен журнал на действията на администраторите: 12 месеца.</li>
+      <li>Профил: <mark class="todo">докато го ползваш / срок за неактивни профили</mark>.</li>
+      <li>Сигнали и снимки: <mark class="todo">срок според номенклатурата на общината</mark>.</li>
+    </ul>
+
+    <h2 id="rights"><span class="n">7</span>Твоите права</h2>
+    <p>Имаш право на достъп до данните си, поправка, изтриване, ограничаване, преносимост и възражение (чл. 15–21), както и да оттеглиш съгласието си за телефона. Име, фамилия и телефон можеш да промениш сам в профила си. За всичко останало пиши на ДЛЗД. Отговаряме до 1 месец.</p>
+    <div class="doc-box"><p>Можеш да подадеш жалба до <strong>Комисията за защита на личните данни</strong> — <a href="https://www.cpdp.bg" target="_blank" rel="noopener">www.cpdp.bg</a>.</p></div>
+
+    <h2 id="security"><span class="n">8</span>Как пазим данните</h2>
+    <ul>
+      <li>Връзката е криптирана (HTTPS), а достъпът до всяка таблица е ограничен по роля на ниво база данни.</li>
+      <li>Администраторите влизат с парола и код от приложение (втори фактор).</li>
+      <li>Действията на администраторите се записват в журнал, който не може да се променя.</li>
+      <li>Ключовете към външните услуги са само на сървъра.</li>
+    </ul>
+
+    <h2 id="storage"><span class="n">9</span>Бисквитки и хранилище в браузъра</h2>
+    <p>Ползваме само това, без което сайтът не работи, затова няма банер за съгласие.</p>
+    <table>
+      <thead><tr><th>Какво</th><th>За какво</th><th>Колко време</th></tr></thead>
+      <tbody>
+        <tr><td>Сесия на Supabase (localStorage)</td><td>Поддържа входа ти</td><td>До изход</td></tr>
+        <tr><td>language (localStorage)</td><td>Избраният език</td><td>Докато не го изтриеш</td></tr>
+        <tr><td>cs_code_sent (localStorage)</td><td>Брои изпратените кодове (до 3 на час)</td><td>1 час</td></tr>
+        <tr><td>cs_login_fails (sessionStorage)</td><td>Брои неуспешните входове за проверката срещу ботове</td><td>До затваряне на раздела</td></tr>
+        <tr><td>Cloudflare Turnstile</td><td>Проверка, че не си бот</td><td>Кратко</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="changes"><span class="n">10</span>Промени в политиката</h2>
+    <p>При промяна версията се вдига и при следващия вход ще те помолим да се съгласиш отново.</p>
+  </article>
+</main>
+
+<button class="to-top" type="button" aria-label="Нагоре"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+<script src="js/legal.js"></script>
+</body>
+</html>

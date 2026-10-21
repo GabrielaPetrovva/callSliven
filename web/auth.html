@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Вход · CallSliven</title>
+<link rel="stylesheet" href="css/fonts.css">
+<!--
+  CallSliven — log in, sign up with an email code, password reset with a code, administrator second factor.
+  Works through Supabase Auth (js/sb.js). Open a tab directly with auth.html#login, #register or #forgot.
+  Optional photo for the left panel: assets/auth.jpg
+-->
+<link rel="stylesheet" href="css/auth.css">
+</head>
+<body>
+
+<div class="auth">
+  <!-- ═════════ Left: photo panel ═════════ -->
+  <aside class="side" aria-hidden="true">
+    <div class="side-bg">
+      <svg class="scene" viewBox="0 0 900 1100" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="a1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5E9A74"/><stop offset=".55" stop-color="#9CC9A6"/><stop offset="1" stop-color="#2E5E3D"/></linearGradient>
+          <radialGradient id="a2" cx=".7" cy=".3" r=".45"><stop offset="0" stop-color="#F1F8DC" stop-opacity=".6"/><stop offset="1" stop-color="#F1F8DC" stop-opacity="0"/></radialGradient>
+        </defs>
+        <rect width="900" height="1100" fill="url(#a1)"/><rect width="900" height="1100" fill="url(#a2)"/>
+        <path d="M0 620 L120 570 L230 600 L340 520 L450 570 L560 500 L680 560 L790 520 L900 560 V1100 H0Z" fill="#6E9F80"/>
+        <path d="M430 1100 L460 700 L495 740 L530 560 L570 670 L605 520 L650 640 L690 560 L730 720 L760 640 L800 1100Z" fill="#4C7A68"/>
+        <path d="M0 790 L160 750 L320 780 L480 740 L640 780 L800 750 L900 770 V1100 H0Z" fill="#3F7353"/>
+        <g fill="#2C5238"><rect x="40" y="840" width="70" height="260"/><rect x="120" y="880" width="56" height="220"/><rect x="186" y="820" width="90" height="280"/><rect x="620" y="850" width="80" height="250"/><rect x="710" y="810" width="100" height="290"/><rect x="820" y="870" width="70" height="230"/></g>
+        <g fill="#F1F8DC" opacity=".7"><rect x="60" y="870" width="8" height="10"/><rect x="210" y="850" width="8" height="10"/><rect x="240" y="900" width="8" height="10"/><rect x="640" y="880" width="8" height="10"/><rect x="740" y="840" width="8" height="10"/><rect x="770" y="890" width="8" height="10"/></g>
+      </svg>
+      <img src="assets/auth.jpg" alt="">
+    </div>
+
+    <a class="brand" href="index.html" tabindex="-1">
+      <span class="crest">
+        <svg viewBox="0 0 36 44" fill="none"><path d="M3 4h30v17c0 10.5-6.6 17.2-15 20C9.6 38.2 3 31.5 3 21V4z" fill="#1F7A3A" stroke="#fff" stroke-width="1.6"/><path d="M9 25l5-7 4 4 3-5 6 8" stroke="#fff" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg>
+        <img src="assets/gerb.png" alt="">
+      </span>
+      <span><span class="brand-name">Call<em>Sliven</em></span><span class="brand-sub" data-i18n="brandSub">Reports for Sliven Municipality</span></span>
+    </a>
+
+    <div class="side-copy">
+      <h2 data-i18n="sideTitle">One profile, <em>every report</em></h2>
+      <ul class="perks">
+        <li><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4 10-10"/></svg></span><span data-i18n="perk1">Report a problem in a minute</span></li>
+        <li><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4 10-10"/></svg></span><span data-i18n="perk2">Follow every status change</span></li>
+        <li><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4 10-10"/></svg></span><span data-i18n="perk3">Your personal data stays private</span></li>
+      </ul>
+      <div class="live">
+        <span class="live-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M8 3 4 21M16 3l4 18M12 4v2M12 10v3M12 17v3"/></svg></span>
+        <div>
+          <div class="live-title" data-i18n="liveTitle">Pothole at a crossing</div>
+          <div class="live-sub" data-i18n="liveSub">City centre</div>
+        </div>
+        <span class="status st-new" id="live-status"><i></i><span>New</span></span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═════════ Right: forms ═════════ -->
+  <main class="main">
+    <div class="topbar">
+      <a class="back" href="index.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        <span data-i18n="back">Back to home</span>
+      </a>
+      <a class="brand mobile-brand" href="index.html">
+        <span class="crest"><svg viewBox="0 0 36 44" fill="none"><path d="M3 4h30v17c0 10.5-6.6 17.2-15 20C9.6 38.2 3 31.5 3 21V4z" fill="#1F7A3A" stroke="#CDE9D2" stroke-width="1.6"/><path d="M9 25l5-7 4 4 3-5 6 8" stroke="#fff" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg><img src="assets/gerb.png" alt=""></span>
+        <span class="brand-name">Call<em>Sliven</em></span>
+      </a>
+      <div class="lang" role="group" aria-label="Language">
+        <button data-lang="bg" class="active" aria-pressed="true">BG</button>
+        <button data-lang="en" aria-pressed="false">EN</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div id="head">
+        <h1 id="title" data-i18n="titleLogin">Welcome <em>back</em></h1>
+        <p class="lead" id="lead" data-i18n="leadLogin">Log in to submit and follow your reports.</p>
+      </div>
+
+      <div class="tabs" role="tablist" id="tabs" data-active="login">
+        <span class="tab-pill" aria-hidden="true"></span>
+        <button class="tab" role="tab" id="tab-login" aria-controls="view-login" aria-selected="true" data-i18n="tabLogin">Log in</button>
+        <button class="tab" role="tab" id="tab-register" aria-controls="view-register" aria-selected="false" data-i18n="tabRegister">Sign up</button>
+      </div>
+
+      <div class="views" id="views">
+
+        <!-- ───── Log in (AUTH-6, AUTH-7) ───── -->
+        <section class="view active" id="view-login" role="tabpanel" aria-labelledby="tab-login">
+          <form id="form-login" novalidate>
+            <div class="alert" id="login-alert" role="alert"><svg class="a-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><div class="alert-body"><span class="alert-text"></span><button type="button" class="alert-act" hidden></button></div></div>
+            <div class="field">
+              <label class="label" for="login-email" data-i18n="email">Имейл</label>
+              <div class="control">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg>
+                <input class="input" id="login-email" name="email" type="email" autocomplete="email" maxlength="254" data-rule="email" placeholder="name@example.com">
+              </div>
+              <p class="err" aria-live="polite"></p>
+            </div>
+            <div class="field">
+              <label class="label" for="login-password" data-i18n="password">Парола</label>
+              <div class="control has-toggle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+                <input class="input" id="login-password" type="password" autocomplete="current-password" maxlength="72" data-rule="required">
+                <button type="button" class="eye" aria-pressed="false" aria-label="Покажи паролата"><svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7c1.6 0 3-.4 4.3-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button>
+              </div>
+              <p class="err" aria-live="polite"></p>
+            </div>
+            <div class="between"><button type="button" class="link" id="to-forgot" data-i18n="forgot">Забравена парола?</button></div>
+            <!-- Turnstile runs invisibly on every log in; after 3 failed attempts it is shown and must be passed (AUTH-7) -->
+            <div class="field captcha-field quiet" id="login-captcha">
+              <div class="captcha" data-captcha></div>
+              <p class="err" aria-live="polite"></p>
+            </div>
+            <button class="btn" type="submit"><span class="spin" aria-hidden="true"></span><span class="btn-text" data-i18n="loginBtn">Вход</span></button>
+            <p class="switch"><span data-i18n="noAccount">Нямаш профил?</span> <button type="button" class="link" data-go="register" data-i18n="createOne">Създай</button></p>
+          </form>
+        </section>
+
+        <!-- ───── Sign up (AUTH-1, 2, 7, 8) ───── -->
+        <section class="view" id="view-register" role="tabpanel" aria-labelledby="tab-register">
+          <form id="form-register" novalidate>
+            <div class="alert" id="register-alert" role="alert"><svg class="a-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><div class="alert-body"><span class="alert-text"></span><button type="button" class="alert-act" hidden></button></div></div>
+            <!-- honeypot (AUTH-8): hidden from people, bots fill it in -->
+            <div class="hp" aria-hidden="true">
+              <label for="reg-hp">Leave empty</label>
+              <input id="reg-hp" name="cs_hp" type="text" tabindex="-1" autocomplete="off" value="">
+            </div>
+            <div class="row">
+              <div class="field">
+                <label class="label" for="reg-first" data-i18n="firstName">Име</label>
+                <div class="control">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                  <input class="input" id="reg-first" autocomplete="given-name" maxlength="60" data-rule="name">
+                </div>
+                <p class="err" aria-live="polite"></p>
+              </div>
+              <div class="field">
+                <label class="label" for="reg-last" data-i18n="lastName">Фамилия</label>
+                <div class="control">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                  <input class="input" id="reg-last" autocomplete="family-name" maxlength="60" data-rule="name">
+                </div>
+                <p class="err" aria-live="polite"></p>
+              </div>
+            </div>
+            <div class="field">
+              <label class="label" for="reg-email" data-i18n="email">Имейл</label>
+              <div class="control">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg>
+                <input class="input" id="reg-email" name="email" type="email" autocomplete="email" maxlength="254" data-rule="email" placeholder="name@example.com">
+              </div>
+              <p class="err" aria-live="polite"></p>
+            </div>
+            <div class="field">
+              <label class="label" for="reg-phone"><span data-i18n="phone">Телефон</span><span class="opt" data-i18n="optional">по желание</span></label>
+              <div class="control">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
+                <input class="input" id="reg-phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" data-rule="phone" placeholder="+359 88 123 4567">
+              </div>
+              <p class="err" aria-live="polite"></p>
+              <p class="hint" data-i18n="phoneHint">Не е публичен и не се изпраща на институциите.</p>
+            </div>
+            <div class="field">
+              <label class="label" for="reg-password" data-i18n="password">Парола</label>
+              <div class="control has-toggle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+                <input class="input" id="reg-password" type="password" autocomplete="new-password" maxlength="72" data-rule="password" aria-describedby="reg-password-hint">
+                <button type="button" class="eye" aria-pressed="false" aria-label="Покажи паролата"><svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7c1.6 0 3-.4 4.3-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button>
+              </div>
+              <div class="meter" data-score="0" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+              <div class="meter-row"><span data-i18n="strength">Сила на паролата</span><span class="meter-label">–</span></div>
+              <p class="hint" id="reg-password-hint" data-i18n="pwHint">Поне 12 символа. Най-лесно е с няколко думи, напр. „зелен-балкон-сливен-7“.</p>
+              <p class="err" aria-live="polite"></p>
+            </div>
+            <div class="field">
+              <label class="label" for="reg-password2" data-i18n="password2">Повтори паролата</label>
+              <div class="control has-toggle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="m9.5 15.5 1.8 1.8 3.2-3.3"/></svg>
+                <input class="input" id="reg-password2" type="password" autocomplete="new-password" maxlength="72" data-rule="match" data-match="reg-password">
+                <button type="button" class="eye" aria-pressed="false" aria-label="Покажи паролата"><svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7c1.6 0 3-.4 4.3-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button>
+              </div>
+              <p class="err" aria-live="polite"></p>
+            </div>
+            <div class="field">
+              <label class="check">
+                <input type="checkbox" id="reg-consent" data-rule="consent">
+                <span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4 10-10"/></svg></span>
+                <span data-i18n="consent">Прочетох <a href="privacy.html" target="_blank">Политиката за поверителност</a> и приемам <a href="terms.html" target="_blank">Условията за ползване</a>.</span>
+              </label>
+              <p class="err" aria-live="polite"></p>
+            </div>
+            <div class="field captcha-field" id="register-captcha">
+              <div class="captcha" data-captcha></div>
+              <p class="err" aria-live="polite"></p>
+            </div>
+            <button class="btn" type="submit"><span class="spin" aria-hidden="true"></span><span class="btn-text" data-i18n="registerBtn">Създай профил</span></button>
+            <p class="switch"><span data-i18n="haveAccount">Вече имаш профил?</span> <button type="button" class="link" data-go="login" data-i18n="logInLink">Влез</button></p>
+          </form>
+        </section>
+
+        <!-- ───── Email code after sign up (AUTH-3, AUTH-4) ───── -->
+        <section class="view sub" id="view-verify">
+          <form id="form-verify" novalidate autocomplete="off">
+            <div class="alert" id="verify-alert" role="alert"><svg class="a-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><div class="alert-body"><span class="alert-text"></span><button type="button" class="alert-act" hidden></button></div></div>
+            <div class="field otp-field" id="verify-otp">
+              <span class="label" id="verify-otp-label" data-i18n="otpLabel">Код от имейла</span>
+              <div data-otp aria-labelledby="verify-otp-label"></div>
+              <p class="err" aria-live="polite"></p>
+            </div>
+            <button class="btn" type="submit"><span class="spin" aria-hidden="true"></span><span class="btn-text" data-i18n="confirmBtn">Потвърди</span></button>
+          </form>
+          <div class="code-tools">
+            <button type="button" class="link" id="verify-resend"></button>
+            <div class="field captcha-field quiet" id="verify-captcha">
+              <div class="captcha" data-captcha></div>
+              <p class="err" aria-live="polite"></p>
+            </div>
+            <p class="hint" data-i18n="verifyNote">Не виждаш писмото? Провери папка „Спам“. Ако не потвърдиш до 24 часа, регистрацията се изтрива.</p>
+          </div>
+          <p class="switch"><button type="button" class="link" data-go="register" data-i18n="wrongEmail">Сгрешен имейл? Регистрирай се отново</button></p>
+        </section>
+
+        <!-- ───── Forgot password (AUTH-6, AUTH-10) ───── -->
+        <section class="view sub" id="view-forgot">
+          <form id="form-forgot" novalidate>
+            <div class="alert" id="forgot-alert" role="alert"><svg class="a-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><div class="alert-body"><span class="alert-text"></span><button type="button" class="alert-act" hidden></button></div></div>
+            <div class="field">
+              <label class="label" for="forgot-email" data-i18n="email">Имейл</label>
+              <div class="control">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg>
+                <input class="input" id="forgot-email" name="email" type="email" autocomplete="email" maxlength="254" data-rule="email" placeholder="name@example.com">
+              </div>
+              <p class="err" aria-live="polite"></p>
+            </div>
+            <div class="field captcha-field" id="forgot-captcha">
+              <div class="captcha" data-captcha></div>
+              <p class="err" aria-live="polite"></p>
+            </div>
+            <button class="btn" type="submit"><span class="spin" aria-hidden="true"></span><span class="btn-text" data-i18n="sendCode">Изпрати код</span></button>
+            <p class="switch"><button type="button" class="link" data-go="login" data-i18n="backToLogin">Обратно към вход</button></p>
+          </form>
+        </section>
+
+        <!-- ───── Code + new password ───── -->
+        <section class="view sub" id="view-reset">
+          <form id="form-reset" novalidate>
+            <div class="alert" id="reset-alert" role="alert"><svg class="a-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><div class="alert-body"><span class="alert-text"></span><button type="button" class="alert-act" hidden></button></div></div>
+            <input type="text" id="reset-username" name="username" autocomplete="username" hidden>
+            <div class="field otp-field" id="reset-otp">
+              <span class="label" id="reset-otp-label" data-i18n="otpLabel">Код от имейла</span>
+              <div data-otp aria-labelledby="reset-otp-label"></div>
+              <p class="err" aria-live="polite"></p>
+            </div>
+            <div class="field">
+              <label class="label" for="reset-password" data-i18n="newPassword">Нова парола</label>
+              <div class="control has-toggle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+                <input class="input" id="reset-password" type="password" autocomplete="new-password" maxlength="72" data-rule="password" aria-describedby="reset-password-hint">
+                <button type="button" class="eye" aria-pressed="false" aria-label="Покажи паролата"><svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7c1.6 0 3-.4 4.3-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button>
+              </div>
+              <div class="meter" data-score="0" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+              <div class="meter-row"><span data-i18n="strength">Сила на паролата</span><span class="meter-label">–</span></div>
+              <p class="hint" id="reset-password-hint" data-i18n="pwHint">Поне 12 символа. Най-лесно е с няколко думи, напр. „зелен-балкон-сливен-7“.</p>
+              <p class="err" aria-live="polite"></p>
+            </div>
+            <div class="field">
+              <label class="label" for="reset-password2" data-i18n="password2">Повтори паролата</label>
+              <div class="control has-toggle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="m9.5 15.5 1.8 1.8 3.2-3.3"/></svg>
+                <input class="input" id="reset-password2" type="password" autocomplete="new-password" maxlength="72" data-rule="match" data-match="reset-password">
+                <button type="button" class="eye" aria-pressed="false" aria-label="Покажи паролата"><svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7c1.6 0 3-.4 4.3-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button>
+              </div>
+              <p class="err" aria-live="polite"></p>
+            </div>
+            <button class="btn" type="submit"><span class="spin" aria-hidden="true"></span><span class="btn-text" data-i18n="resetBtn">Запази новата парола</span></button>
+          </form>
+          <div class="code-tools">
+            <button type="button" class="link" id="reset-resend"></button>
+            <div class="field captcha-field quiet" id="reset-captcha">
+              <div class="captcha" data-captcha></div>
+              <p class="err" aria-live="polite"></p>
+            </div>
+          </div>
+            <p class="switch"><button type="button" class="link" data-go="login" data-i18n="backToLogin">Обратно към вход</button></p>
+        </section>
+
+        <!-- ───── Second factor for administrators (ADM-1: TOTP, aal2) ───── -->
+        <section class="view sub" id="view-mfa">
+          <form id="form-mfa" novalidate autocomplete="off">
+            <span class="mfa-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.3 7.5 9.5 4.4-1.2 7.5-4.9 7.5-9.5V6L12 3z"/><path d="m8.8 12.2 2.2 2.2 4.3-4.4"/></svg></span>
+            <div class="alert" id="mfa-alert" role="alert"><svg class="a-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><div class="alert-body"><span class="alert-text"></span><button type="button" class="alert-act" hidden></button></div></div>
+            <div class="field otp-field" id="mfa-otp">
+              <span class="label" id="mfa-otp-label" data-i18n="totpLabel">Код от имейла</span>
+              <div data-otp aria-labelledby="mfa-otp-label"></div>
+              <p class="err" aria-live="polite"></p>
+            </div>
+            <button class="btn" type="submit"><span class="spin" aria-hidden="true"></span><span class="btn-text" data-i18n="verifyBtn">Потвърди</span></button>
+            <p class="hint" data-i18n="mfaLost">Нямаш достъп до приложението? Свържи се със Super Admin, за да нулира втория фактор.</p>
+            <p class="switch"><button type="button" class="link" id="mfa-back" data-i18n="logOut">Изход</button></p>
+          </form>
+        </section>
+
+        <!-- ───── Result screens ───── -->
+        <section class="view" id="view-status" aria-live="polite">
+          <div class="done">
+            <span class="done-ico" id="status-ico"></span>
+            <h2 id="status-title"></h2>
+            <p id="status-text"></p>
+            <button class="btn" type="button" id="status-act"><span class="btn-text"></span></button>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <p class="legal">© 2026 CallSliven · <a href="terms.html" data-i18n="terms">Terms of use</a> · <a href="privacy.html" data-i18n="privacy">Privacy policy</a></p>
+  </main>
+</div>
+
+<script src="vendor/supabase-js-2.118.0/supabase.js"></script>
+<script src="js/config.js"></script>
+<script src="js/sb.js"></script>
+<script src="js/otp.js"></script>
+<script src="js/auth.js"></script>
+</body>
+</html>

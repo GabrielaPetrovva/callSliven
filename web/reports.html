@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reports · CallSliven</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/reports.css">
+</head>
+<body class="page-reports">
+
+<a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+
+<header class="navbar solid" id="navbar">
+  <nav class="nav-inner" aria-label="Main">
+    <a class="brand" href="index.html" aria-label="CallSliven – home">
+      <span class="crest" aria-hidden="true">
+        <svg viewBox="0 0 36 44" fill="none"><path d="M3 4h30v17c0 10.5-6.6 17.2-15 20C9.6 38.2 3 31.5 3 21V4z" fill="#1F6B34" stroke="#BFDB8C" stroke-width="1.6"/><path d="M9 25l5-7 4 4 3-5 6 8" stroke="#EEF3EA" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg>
+        <img src="assets/gerb.png" alt="" onerror="this.remove()">
+      </span>
+      <span class="brand-text">
+        <span class="brand-name">Call<em>Sliven</em></span>
+        <span class="brand-sub" data-i18n="brandSub">Reports for Sliven Municipality</span>
+      </span>
+    </a>
+
+    <ul class="nav-links" id="nav-links">
+      <li><a href="reports.html" data-i18n="navReports">Reports</a></li>
+      <li><a href="letters.html" data-i18n="navLetters">Letters, complaints, FOI</a></li>
+      <li><a href="help.html" data-i18n="navHelp">Help</a></li>
+    </ul>
+
+    <div class="nav-right">
+      <div class="lang" role="group" aria-label="Language">
+        <button id="lang-en" class="active" data-lang="en" aria-pressed="true">EN</button>
+        <button id="lang-bg" data-lang="bg" aria-pressed="false">BG</button>
+      </div>
+      <a class="login" href="auth.html#login">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span data-i18n="login">Log in</span>
+      </a>
+      <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+</header>
+
+<main id="main" class="reports-page">
+  <!-- ═════════ Page head ═════════ -->
+  <section class="page-head">
+    <div class="wrap page-head-inner">
+      <div>
+        <h1 data-i18n="pageTitle">Reports <em>in Sliven</em></h1>
+        <p class="page-lead" id="count-line"></p>
+      </div>
+      <a class="btn btn-accent btn-glow" href="auth.html#login"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="ctaSubmit">Submit a report</span></a>
+    </div>
+  </section>
+
+  <!-- ═════════ Filters ═════════ -->
+  <section class="filters" aria-label="Filters" id="filters">
+    <div class="wrap">
+      <div class="filter-top">
+        <form class="r-search" role="search" id="search-form">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <label for="q" class="sr-only" data-i18n="searchLabel">Search reports</label>
+          <input id="q" name="q" type="search" autocomplete="off" data-i18n-ph="searchPh" placeholder="Search by street, problem or number">
+        </form>
+
+        <div class="dd-slot" id="dd-cat"></div>
+        <div class="dd-slot" id="dd-status"></div>
+        <div class="dd-slot" id="dd-district"></div>
+
+        <div class="segmented" role="group" aria-label="Period" id="period">
+          <button type="button" data-period="7" data-i18n="p7">7 days</button>
+          <button type="button" data-period="30" data-i18n="p30">30 days</button>
+          <button type="button" data-period="all" data-i18n="pAll">All</button>
+        </div>
+
+        <div class="dd-slot sort" id="dd-sort"></div>
+      </div>
+
+      <div class="active-bar" id="active-bar" hidden>
+        <span id="active-text"></span>
+        <button type="button" class="link-btn" id="clear" data-i18n="clear">Clear filters</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════ List + map ═════════ -->
+  <section class="results wrap" id="results">
+    <div class="list-col">
+      <ol class="report-list" id="list" aria-live="polite"></ol>
+      <div class="empty" id="empty" hidden>
+        <span class="empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4M8 11h6"/></svg></span>
+        <h2 data-i18n="emptyTitle">No reports match these filters</h2>
+        <p data-i18n="emptyText">Try another category or period, or clear the filters.</p>
+        <button type="button" class="btn btn-accent" id="clear2" data-i18n="clear">Clear filters</button>
+      </div>
+      <p class="sample-note" data-i18n="sample">Sample data for the prototype</p>
+    </div>
+    <div class="map-col">
+      <div class="map-wrap">
+        <div id="map" role="region" aria-label="Map of reports"></div>
+        <div class="map-legend" id="legend"></div>
+        <p class="map-note" data-i18n="approx">Locations are shown approximately.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- mobile: switch between list and map -->
+  <button type="button" class="view-toggle" id="view-toggle" aria-pressed="false">
+    <svg class="i-map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg>
+    <svg class="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+    <span id="view-toggle-text"></span>
+  </button>
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <a class="brand" href="index.html" aria-label="CallSliven – home">
+          <span class="crest" aria-hidden="true">
+            <svg viewBox="0 0 36 44" fill="none"><path d="M3 4h30v17c0 10.5-6.6 17.2-15 20C9.6 38.2 3 31.5 3 21V4z" fill="#1F6B34" stroke="#BFDB8C" stroke-width="1.6"/><path d="M9 25l5-7 4 4 3-5 6 8" stroke="#EEF3EA" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg>
+            <img src="assets/gerb.png" alt="" onerror="this.remove()">
+          </span>
+          <span class="brand-text"><span class="brand-name">Call<em>Sliven</em></span></span>
+        </a>
+        <p class="footer-about" data-i18n="footAbout">Report everyday problems in Sliven and follow how they get fixed.</p>
+      </div>
+      <div>
+        <h4 data-i18n="footLinks">Quick links</h4>
+        <ul>
+          <li><a href="auth.html#login" data-i18n="ctaSubmit">Submit a report</a></li>
+          <li><a href="reports.html" data-i18n="navReports">Reports</a></li>
+          <li><a href="letters.html" data-i18n="navLetters">Letters, complaints, FOI</a></li>
+          <li><a href="help.html" data-i18n="navHelp">Help</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 data-i18n="footLegal">Legal</h4>
+        <ul>
+          <li><a href="#privacy" data-i18n="privacy">Privacy policy</a></li>
+          <li><a href="#terms" data-i18n="terms">Terms of use</a></li>
+          <li><a href="#cookies" data-i18n="cookies">Cookies</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 data-i18n="footContact">Contact</h4>
+        <address><span data-i18n="addr">Sliven Municipality<br>1 Tsar Osvoboditel Sq., 8800 Sliven</span><br><a href="mailto:contact@callsliven.bg">contact@callsliven.bg</a></address>
+        <a class="btn-112" href="tel:112"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg><span data-i18n="call112">Emergency? Call 112</span></a>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2026 CallSliven</div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<script src="js/data.js"></script>
+<script src="js/reports.js"></script>
+</body>
+</html>
