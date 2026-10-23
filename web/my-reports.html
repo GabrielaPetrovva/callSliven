@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Моите сигнали · CallSliven</title>
+<!--
+  CallSliven — the citizen's own reports (MY-1…4). Only for logged-in users.
+  Reads report_private (own rows), reports, report_events through RLS; withdraws with RPC withdraw_report.
+  Styles: fonts.css, base.css, profile.css (cards, alerts, buttons), my-reports.css. Scripts: common.js, my-reports.js.
+-->
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/profile.css">
+<link rel="stylesheet" href="css/my-reports.css">
+</head>
+<body>
+
+<a class="skip" href="#main" data-i18n="skip">Към съдържанието</a>
+
+<header class="navbar solid" id="navbar">
+  <nav class="nav-inner" aria-label="Main">
+    <a class="brand" href="index.html" aria-label="CallSliven – home">
+      <span class="crest" aria-hidden="true">
+        <svg viewBox="0 0 36 44" fill="none"><path d="M3 4h30v17c0 10.5-6.6 17.2-15 20C9.6 38.2 3 31.5 3 21V4z" fill="#1F6B34" stroke="#BFDB8C" stroke-width="1.6"/><path d="M9 25l5-7 4 4 3-5 6 8" stroke="#EEF3EA" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg>
+        <img src="assets/gerb.png" alt="">
+      </span>
+      <span class="brand-text">
+        <span class="brand-name">Call<em>Sliven</em></span>
+        <span class="brand-sub" data-i18n="brandSub">Reports for Sliven Municipality</span>
+      </span>
+    </a>
+
+    <ul class="nav-links" id="nav-links">
+      <li><a href="reports.html" data-i18n="navReports">Reports</a></li>
+      <li><a href="letters.html" data-i18n="navLetters">Letters, complaints, FOI</a></li>
+      <li><a href="help.html" data-i18n="navHelp">Help</a></li>
+    </ul>
+
+    <div class="nav-right">
+      <div class="lang" role="group" aria-label="Language">
+        <button id="lang-en" class="active" data-lang="en" aria-pressed="true">EN</button>
+        <button id="lang-bg" data-lang="bg" aria-pressed="false">BG</button>
+      </div>
+      <a class="login" href="auth.html#login">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span data-i18n="login">Log in</span>
+      </a>
+      <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+</header>
+
+<main id="main" class="page">
+  <div class="wrap mid">
+    <div class="page-head head-row">
+      <div>
+        <h1 data-i18n="mTitle">Моите <em>сигнали</em></h1>
+        <p class="lead" id="lead"></p>
+      </div>
+      <a class="btn btn-accent btn-glow" href="submit.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="ctaSubmit">Подай сигнал</span></a>
+    </div>
+
+    <div class="tabs" role="tablist" id="tabs">
+      <button type="button" role="tab" data-f="all" aria-selected="true"><span data-i18n="fAll">Всички</span> <i id="n-all"></i></button>
+      <button type="button" role="tab" data-f="open" aria-selected="false"><span data-i18n="fOpen">Активни</span> <i id="n-open"></i></button>
+      <button type="button" role="tab" data-f="done" aria-selected="false"><span data-i18n="fDone">Приключени</span> <i id="n-done"></i></button>
+    </div>
+
+    <div class="alert" id="alert" role="alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span class="alert-text"></span></div>
+
+    <div class="skeleton-wrap" id="loading"><div class="skeleton tall"></div><div class="skeleton tall"></div></div>
+    <ol class="my-list" id="list" aria-live="polite"></ol>
+
+    <section class="card empty" id="empty" hidden>
+      <span class="empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6M8 2h8v4H8z"/><rect x="4" y="4" width="16" height="18" rx="2.5"/><path d="M8 11h8M8 15h5"/></svg></span>
+      <h2 id="empty-title"></h2>
+      <p id="empty-text"></p>
+      <a class="btn btn-accent" href="submit.html" data-i18n="ctaSubmit">Подай сигнал</a>
+    </section>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <a class="brand" href="index.html" aria-label="CallSliven – home">
+          <span class="crest" aria-hidden="true">
+            <svg viewBox="0 0 36 44" fill="none"><path d="M3 4h30v17c0 10.5-6.6 17.2-15 20C9.6 38.2 3 31.5 3 21V4z" fill="#1F6B34" stroke="#BFDB8C" stroke-width="1.6"/><path d="M9 25l5-7 4 4 3-5 6 8" stroke="#EEF3EA" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg>
+            <img src="assets/gerb.png" alt="">
+          </span>
+          <span class="brand-text"><span class="brand-name">Call<em>Sliven</em></span></span>
+        </a>
+        <p class="footer-about" data-i18n="footAbout">Report everyday problems in Sliven and follow how they get fixed.</p>
+      </div>
+      <div>
+        <h4 data-i18n="footLinks">Quick links</h4>
+        <ul>
+          <li><a href="submit.html" data-i18n="ctaSubmit">Submit a report</a></li>
+          <li><a href="reports.html" data-i18n="navReports">Reports</a></li>
+          <li><a href="letters.html" data-i18n="navLetters">Letters, complaints, FOI</a></li>
+          <li><a href="help.html" data-i18n="navHelp">Help</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 data-i18n="footLegal">Legal</h4>
+        <ul>
+          <li><a href="privacy.html" data-i18n="privacy">Privacy policy</a></li>
+          <li><a href="terms.html" data-i18n="terms">Terms of use</a></li>
+          <li><a href="privacy.html#storage" data-i18n="cookies">Cookies</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 data-i18n="footContact">Contact</h4>
+        <address><span data-i18n="addr">Sliven Municipality<br>1 Tsar Osvoboditel Sq., 8800 Sliven</span><br><a href="mailto:contact@callsliven.bg">contact@callsliven.bg</a></address>
+        <a class="btn-112" href="tel:112"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg><span data-i18n="call112">Emergency? Call 112</span></a>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2026 CallSliven</div>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/common.js"></script>
+<script src="js/my-reports.js"></script>
+</body>
+</html>
