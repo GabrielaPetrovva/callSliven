@@ -4,7 +4,7 @@
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const sb = window.SB;
-  const ADMIN_HOME = 'admin.html', CITIZEN_HOME = 'index.html';
+  const ADMIN_HOME = 'admin.html', CITIZEN_HOME = 'auth.html';
 
   const T = {
     bg: {

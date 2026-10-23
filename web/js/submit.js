@@ -296,8 +296,9 @@
       if (error || !data || !data.length) { $('#dups').hidden = true; return; }
       const ul = $('#dup-list'); ul.innerHTML = '';
       data.forEach(r => {
-        const li = document.createElement('li'), a = document.createElement('a');
-        a.href = `report.html?number=${encodeURIComponent(r.report_number)}`; a.target = '_blank'; a.rel = 'noopener';
+        // plain text until the public report page (report.html) is back in the site
+        const li = document.createElement('li'), a = document.createElement('div');
+        a.className = 'dup-item';
         a.textContent = `№${r.report_number} · ${r.report_title}`;
         const d = document.createElement('span'); d.textContent = CS.t('meters')(r.distance_m);
         a.append(d); li.append(a); ul.append(li);

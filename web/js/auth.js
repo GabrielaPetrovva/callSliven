@@ -8,7 +8,7 @@
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const sb = window.SB;
   const { TURNSTILE_SITE_KEY, POLICY_VERSION } = window.CS_CONFIG;
-  const CITIZEN_HOME = 'index.html', ADMIN_HOME = 'admin.html', MFA_SETUP = 'mfa-setup.html';
+  const CITIZEN_HOME = 'profile.html', ADMIN_HOME = 'admin.html', MFA_SETUP = 'mfa-setup.html';
   const params = new URLSearchParams(location.search);
 
   /* ═════════ Rules from MVP.md ═════════ */
@@ -27,7 +27,6 @@
     bg: {
       brandSub:'Сигнали за община Сливен', back:'Към началото',
       sideTitle:'Един профил, <em>всички сигнали</em>', perk1:'Подаваш сигнал за минута', perk2:'Следиш всяка промяна в статуса', perk3:'Личните ти данни остават защитени',
-      liveTitle:'Дупка на пешеходна пътека', liveSub:'Център',
       titleLogin:'Добре дошъл <em>отново</em>', leadLogin:'Влез, за да подаваш и следиш сигналите си.',
       titleRegister:'Създай <em>профил</em>', leadRegister:'Отнема минута. След регистрацията ще получиш код по имейл.',
       titleVerify:'Потвърди <em>имейла</em>', leadVerify:e => ['Изпратихме 6-цифрен код на ', e, '. Кодът важи 10 минути.'],
@@ -63,12 +62,11 @@
       eCaptcha:'Потвърди, че не си робот.', eCaptchaServer:'Сървърът не прие проверката срещу ботове. Изчакай отметката и опитай отново.', eCaptchaErr:c => `Проверката срещу ботове даде грешка ${c}.`, eCaptchaLoad:'Проверката срещу ботове не се зареди. Изключи блокера на реклами или презареди страницата.',
       eNetwork:'Няма връзка със сървъра. Провери интернета си и опитай отново.', eGeneric:'Нещо се обърка. Опитай отново.',
       iCodeSent:'Изпратихме нов код.',
-      statuses:['Нов','Изпратен','В обработка','Решен'], showPw:'Покажи паролата', hidePw:'Скрий паролата', docTitle:'Вход'
+      st_new:'Нов', st_sent:'Изпратен', st_in_progress:'В обработка', st_resolved:'Решен', st_closed:'Затворен', showPw:'Покажи паролата', hidePw:'Скрий паролата', docTitle:'Вход'
     },
     en: {
       brandSub:'Reports for Sliven Municipality', back:'Back to home',
       sideTitle:'One profile, <em>every report</em>', perk1:'Report a problem in a minute', perk2:'Follow every status change', perk3:'Your personal data stays private',
-      liveTitle:'Pothole at a crossing', liveSub:'City centre',
       titleLogin:'Welcome <em>back</em>', leadLogin:'Log in to submit and follow your reports.',
       titleRegister:'Create your <em>profile</em>', leadRegister:"It takes a minute. You'll get a code by email afterwards.",
       titleVerify:'Confirm your <em>email</em>', leadVerify:e => ['We sent a 6-digit code to ', e, '. It is valid for 10 minutes.'],
@@ -104,7 +102,7 @@
       eCaptcha:"Confirm that you're not a robot.", eCaptchaServer:'The server did not accept the anti-bot check. Wait for the tick and try again.', eCaptchaErr:c => `The anti-bot check returned error ${c}.`, eCaptchaLoad:'The anti-bot check did not load. Turn off your ad blocker or reload the page.',
       eNetwork:'No connection to the server. Check your internet and try again.', eGeneric:'Something went wrong. Try again.',
       iCodeSent:'We sent a new code.',
-      statuses:['New','Sent','In progress','Resolved'], showPw:'Show password', hidePw:'Hide password', docTitle:'Log in'
+      st_new:'New', st_sent:'Sent', st_in_progress:'In progress', st_resolved:'Resolved', st_closed:'Closed', showPw:'Show password', hidePw:'Hide password', docTitle:'Log in'
     }
   };
   let lang = 'bg';
@@ -681,16 +679,24 @@
     if (img.complete && !img.naturalWidth) drop(); else img.addEventListener('error', drop);
   });
 
-  /* ═════════ Live status card on the photo ═════════ */
-  const live = $('#live-status');
-  const cls = ['st-new','st-sent','st-progress','st-resolved'];
-  let li = 0;
-  function renderLive() { $('span', live).textContent = t('statuses')[li]; live.className = 'status ' + cls[li]; }
-  setInterval(() => {
-    if (document.hidden) return;
-    live.classList.add('swap');
-    setTimeout(() => { li = (li + 1) % 4; renderLive(); }, 260);
-  }, 2200);
+  /* ═════════ Card on the photo: the latest real public report (search_public_reports) ═════════
+     Hidden when there is none or the request fails — no made-up examples. */
+  const live = $('#live-status'), liveCard = $('.live');
+  const LIVE_CLS = { new:'st-new', sent:'st-sent', in_progress:'st-progress', resolved:'st-resolved', closed:'st-new' };
+  let latest = null;
+  function renderLive() {
+    liveCard.hidden = !latest;
+    if (!latest) return;
+    $('.live-title', liveCard).textContent = latest.title;
+    $('.live-sub', liveCard).textContent = latest.sub;
+    $('span', live).textContent = t('st_' + latest.status) || '';
+    live.className = 'status ' + (LIVE_CLS[latest.status] || 'st-new');
+  }
+  sb.rpc('search_public_reports', { p_limit:1 }).then(({ data }) => {
+    const r = data && data[0];
+    if (r) latest = { title:r.out_title, sub:[r.out_subcategory, r.out_address].filter(Boolean).join(' · '), status:r.out_status };
+    renderLive();
+  }, () => renderLive());
 
   /* ═════════ Start ═════════ */
   applyLang(lang);

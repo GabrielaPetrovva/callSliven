@@ -274,3 +274,8 @@ form{display:flex;flex-direction:column;gap:16px}
 .captcha-field.quiet .captcha{min-height:0}
 .otp input:disabled{background:#F3F5F3;color:#9AA79E;cursor:not-allowed}
 .view.sub > .switch{margin-top:18px}
+.alert-tech{font-size:12px;font-weight:500;opacity:.75;word-break:break-word}
+
+/* the card on the photo shows a real report: long titles are cut with … */
+.live > div{min-width:0}
+.live-title,.live-sub{max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

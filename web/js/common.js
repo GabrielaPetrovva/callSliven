@@ -21,7 +21,6 @@
       footAbout:'Report everyday problems in Sliven and follow how they get fixed.', footLinks:'Quick links', footLegal:'Legal', footContact:'Contact',
       privacy:'Privacy policy', terms:'Terms of use', cookies:'Cookies',
       addr:'Sliven Municipality<br>1 Tsar Osvoboditel Sq., 8800 Sliven', call112:'Emergency? Call 112',
-      sample:'Sample data for the prototype',
       myReports:'My reports', profile:'Profile', adminPanel:'Admin panel', logout:'Log out', accountMenu:'Account menu',
       today:'today', yesterday:'yesterday', daysAgo:n => `${n} days ago`
     },
@@ -36,7 +35,6 @@
       footAbout:'Подай сигнал за проблем в Сливен и проследи как се решава.', footLinks:'Бързи връзки', footLegal:'Правна информация', footContact:'Контакт',
       privacy:'Политика за поверителност', terms:'Условия за ползване', cookies:'Бисквитки',
       addr:'Община Сливен<br>пл. „Цар Освободител“ 1, 8800 Сливен', call112:'Спешно? Звънни на 112',
-      sample:'Примерни данни за прототипа',
       myReports:'Моите сигнали', profile:'Профил', adminPanel:'Админ панел', logout:'Изход', accountMenu:'Меню на профила',
       today:'днес', yesterday:'вчера', daysAgo:n => `преди ${n} дни`
     }
