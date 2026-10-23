@@ -271,7 +271,7 @@
         const { data: { user } } = await sb.auth.getUser();      // asks the server: an old or revoked token gives null
         if (!user) return null;
         const { data: profile } = await sb.from('profiles')
-          .select('first_name, last_name, phone, role, active, consent_version, consent_at, created_at')
+          .select('first_name, last_name, phone, role, active, restricted_until, consent_version, consent_at, created_at')
           .eq('id', user.id).maybeSingle();
         if (profile && profile.active === false) { await sb.auth.signOut(); return null; }
         return { sb, user, profile };
@@ -280,7 +280,9 @@
     async requireUser() {
       const ctx = await CS.session();
       if (!ctx) {
-        const here = location.pathname.split('/').pop() || 'index.html';
+        // some local servers drop ".html" from the address (/submit) — put it back so auth.html accepts it
+        let here = location.pathname.split('/').pop() || 'index.html';
+        if (!here.endsWith('.html')) here += '.html';
         location.href = 'auth.html?next=' + encodeURIComponent(here + location.search) + '#login';
         return null;
       }
@@ -288,7 +290,7 @@
     },
     async logout() {
       try { const sb = await CS.client(); await sb.auth.signOut(); } catch (e) {}
-      location.href = 'index.html';
+      location.href = 'auth.html';
     },
     /* replace the "Log in" link with the user menu, or put it back */
     renderUser(u) {
@@ -312,6 +314,7 @@
           </button>
           <div class="user-pop" id="user-pop">
             <div class="user-head"><b class="user-full"></b><span class="user-mail"></span></div>
+            <a href="submit.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg><span data-i18n="ctaSubmit">${CS.t('ctaSubmit')}</span></a>
             <a href="my-reports.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6M8 2h8v4H8z"/><rect x="4" y="4" width="16" height="18" rx="2.5"/><path d="M8 11h8M8 15h5"/></svg><span data-i18n="myReports">${CS.t('myReports')}</span></a>
             <a href="profile.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><span data-i18n="profile">${CS.t('profile')}</span></a>
             <a href="admin.html" class="staff-only" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.3 7.5 9.5 4.4-1.2 7.5-4.9 7.5-9.5V6L12 3z"/></svg><span data-i18n="adminPanel">${CS.t('adminPanel')}</span></a>
