@@ -1,26 +1,26 @@
 <!doctype html>
-<html lang="en">
+<html lang="bg">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Report · CallSliven</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<meta name="robots" content="noindex">
+<!-- CallSliven — one public report (PUB-4…6), from get_public_report. noindex: report pages are not for search engines. -->
+<title>Сигнал · CallSliven</title>
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="vendor/leaflet-1.9.4/leaflet.css">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/report.css">
 </head>
 <body class="page-report">
 
-<a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+<a class="skip" href="#main" data-i18n="skip">Към съдържанието</a>
 
 <header class="navbar solid" id="navbar">
   <nav class="nav-inner" aria-label="Main">
     <a class="brand" href="index.html" aria-label="CallSliven – home">
       <span class="crest" aria-hidden="true">
         <svg viewBox="0 0 36 44" fill="none"><path d="M3 4h30v17c0 10.5-6.6 17.2-15 20C9.6 38.2 3 31.5 3 21V4z" fill="#1F6B34" stroke="#BFDB8C" stroke-width="1.6"/><path d="M9 25l5-7 4 4 3-5 6 8" stroke="#EEF3EA" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg>
-        <img src="assets/gerb.png" alt="" onerror="this.remove()">
+        <img src="assets/gerb.png" alt="">
       </span>
       <span class="brand-text">
         <span class="brand-name">Call<em>Sliven</em></span>
@@ -49,25 +49,48 @@
 </header>
 
 <main id="main" class="report-page">
-  <div class="wrap">
-    <nav class="crumbs" aria-label="Breadcrumb">
-      <a href="reports.html" id="back-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg><span data-i18n="navReports">Reports</span></a>
-      <span aria-hidden="true">/</span>
-      <span id="crumb-id" aria-current="page"></span>
+  <div class="wrap mid">
+    <nav class="crumbs" aria-label="Навигация">
+      <a href="reports.html" id="back-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg><span data-i18n="navReports">Сигнали</span></a>
+      <span aria-hidden="true">/</span><span id="crumb-id" aria-current="page"></span>
     </nav>
 
-    <!-- filled by js/report.js -->
-    <div id="report"></div>
+    <div class="r-loading" id="loading"><div class="sk big"></div><div class="sk"></div></div>
 
-    <!-- shown when the id is missing or unknown -->
+    <article class="r-card" id="report" hidden>
+      <p class="r-linked" id="linked" hidden></p>
+      <header class="r-head">
+        <span class="r-ico" id="r-ico"></span>
+        <div>
+          <span class="r-cat" id="r-cat"></span>
+          <h1 id="r-title"></h1>
+          <div class="r-meta" id="r-meta"></div>
+        </div>
+        <span id="r-status"></span>
+      </header>
+      <p class="r-desc" id="r-desc"></p>
+      <p class="r-more" id="r-more" hidden></p>
+      <div class="r-grid">
+        <section aria-labelledby="tl-h">
+          <h2 id="tl-h" data-i18n="timeline">Хронология</h2>
+          <ol class="tl" id="timeline"></ol>
+        </section>
+        <section aria-labelledby="map-h">
+          <h2 id="map-h" data-i18n="place">Място</h2>
+          <p class="r-addr" id="r-addr"></p>
+          <div class="r-map"><div id="map" role="region" aria-label="Карта"></div></div>
+          <p class="hint" data-i18n="approx">Мястото е показано приблизително.</p>
+        </section>
+      </div>
+    </article>
+
     <section class="not-found" id="not-found" hidden>
       <span class="nf-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4M9 9l4 4M13 9l-4 4"/></svg></span>
-      <h1 data-i18n="nfTitle">We couldn't find this report</h1>
-      <p data-i18n="nfText">The link may be wrong or the report may have been removed.</p>
-      <a class="btn btn-accent" href="reports.html" data-i18n="nfBtn">See all reports</a>
+      <h1 data-i18n="nfTitle">Сигналът не е наличен</h1>
+      <p data-i18n="nfText">Линкът може да е грешен, или сигналът е оттеглен, отхвърлен или още чака проверка.</p>
+      <a class="btn btn-accent" href="reports.html" data-i18n="nfBtn">Към всички сигнали</a>
     </section>
   </div>
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </main>
 
 <footer class="footer">
@@ -77,7 +100,7 @@
         <a class="brand" href="index.html" aria-label="CallSliven – home">
           <span class="crest" aria-hidden="true">
             <svg viewBox="0 0 36 44" fill="none"><path d="M3 4h30v17c0 10.5-6.6 17.2-15 20C9.6 38.2 3 31.5 3 21V4z" fill="#1F6B34" stroke="#BFDB8C" stroke-width="1.6"/><path d="M9 25l5-7 4 4 3-5 6 8" stroke="#EEF3EA" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg>
-            <img src="assets/gerb.png" alt="" onerror="this.remove()">
+            <img src="assets/gerb.png" alt="">
           </span>
           <span class="brand-text"><span class="brand-name">Call<em>Sliven</em></span></span>
         </a>
@@ -95,9 +118,9 @@
       <div>
         <h4 data-i18n="footLegal">Legal</h4>
         <ul>
-          <li><a href="#privacy" data-i18n="privacy">Privacy policy</a></li>
-          <li><a href="#terms" data-i18n="terms">Terms of use</a></li>
-          <li><a href="#cookies" data-i18n="cookies">Cookies</a></li>
+          <li><a href="privacy.html" data-i18n="privacy">Privacy policy</a></li>
+          <li><a href="terms.html" data-i18n="terms">Terms of use</a></li>
+          <li><a href="privacy.html#storage" data-i18n="cookies">Cookies</a></li>
         </ul>
       </div>
       <div>
@@ -110,10 +133,10 @@
   </div>
 </footer>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="vendor/leaflet-1.9.4/leaflet.js"></script>
 <script src="js/config.js"></script>
 <script src="js/common.js"></script>
-<script src="js/data.js"></script>
+<script src="js/public-data.js"></script>
 <script src="js/report.js"></script>
 </body>
 </html>

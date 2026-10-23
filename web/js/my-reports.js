@@ -14,7 +14,7 @@
       timeline:'Хронология', review:'Чака проверка от администратор', reviewX:'Още не е публичен, защото текстът съдържа лични данни или линк. След проверката ще се появи на картата.',
       rejectT:'Причина за отхвърляне', r_insufficient_info:'Недостатъчна информация', r_out_of_scope:'Извън компетенциите на общината', r_inappropriate:'Неприемливо съдържание', r_spam:'Спам',
       dupT:n => `Свързан със сигнал №${n}`, dupX:'Същият проблем вече е подаден. Следи хронологията на основния сигнал:',
-      withdraw:'Оттегли сигнала', withdrawQ:'Сигурен ли си? Оттегленият сигнал не може да се върне.', yes:'Да, оттегли', no:'Отказ',
+      publicPage:'Публична страница', withdraw:'Оттегли сигнала', withdrawQ:'Сигурен ли си? Оттегленият сигнал не може да се върне.', yes:'Да, оттегли', no:'Отказ',
       withdrawn:'Сигналът е оттеглен', eWithdraw:'Сигналът вече не може да бъде оттеглен, защото администратор е започнал работа по него.',
       eLoad:'Сигналите не се заредиха. Презареди страницата.', eNetwork:'Няма връзка със сървъра. Опитай отново.',
       emptyT:'Още нямаш сигнали', emptyX:'Видиш ли проблем в града, подай сигнал. Тук ще следиш какво се случва с него.',
@@ -28,7 +28,7 @@
       timeline:'Timeline', review:'Awaiting review by an administrator', reviewX:"Not public yet, because the text contains personal data or a link. After the review it will appear on the map.",
       rejectT:'Reason for rejection', r_insufficient_info:'Not enough information', r_out_of_scope:"Outside the municipality's competence", r_inappropriate:'Inappropriate content', r_spam:'Spam',
       dupT:n => `Linked to report #${n}`, dupX:'The same problem was already reported. Follow the main report:',
-      withdraw:'Withdraw report', withdrawQ:"Are you sure? A withdrawn report can't be restored.", yes:'Yes, withdraw', no:'Cancel',
+      publicPage:'Public page', withdraw:'Withdraw report', withdrawQ:"Are you sure? A withdrawn report can't be restored.", yes:'Yes, withdraw', no:'Cancel',
       withdrawn:'Report withdrawn', eWithdraw:'This report can no longer be withdrawn, because an administrator has started working on it.',
       eLoad:"Your reports didn't load. Reload the page.", eNetwork:'No connection to the server. Try again.',
       emptyT:'No reports yet', emptyX:"See a problem in the city? Submit a report and follow what happens to it here.",
@@ -161,6 +161,10 @@
       body.append(el('span', 'tl-h', CS.t('timeline')), timeline(it.events));
     }
 
+    if (['new', 'sent', 'in_progress', 'resolved', 'closed'].includes(it.status) && !it.review && !it.master) {
+      const a = el('a', 'link', CS.t('publicPage') + ' →'); a.href = `report.html?number=${it.number}`;
+      body.append(a);
+    }
     if (it.status === 'new' && !it.master) {                                                // MY-2: the server decides; the button only shows while status is "new"
       const actions = el('div', 'mr-actions');
       const w = el('button', 'btn btn-outline', CS.t('withdraw')); w.type = 'button';
