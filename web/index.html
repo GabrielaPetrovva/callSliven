@@ -7,7 +7,9 @@
 <meta name="description" content="Report everyday problems in Sliven and follow how they get fixed.">
 <link rel="stylesheet" href="css/fonts.css">
 <!--
-  CallSliven — home page. Styles: css/base.css + css/home.css. Scripts: js/common.js, js/data.js, js/home.js.
+  CallSliven — home page. Styles: css/base.css + css/home.css. "Submit a report" opens submit.html, which sends visitors who are not logged in to log in first.
+  Scripts: js/common.js, js/public-data.js, js/home.js.
+  Latest reports and category chips come from the database (search_public_reports, categories) — no sample data.
   Photos (picked up automatically from assets/): gerb.png, slide-1.jpg, slide-2.jpg, slide-3.jpg, why-bg.jpg
 -->
 <link rel="stylesheet" href="css/base.css">
@@ -125,6 +127,7 @@
       <button type="submit" data-i18n="searchBtn">Search</button>
     </form>
 
+    <!-- data-cat is matched to the category name in the database (js/home.js → CAT_NAME) -->
     <ul class="chips" aria-label="Categories">
       <li><button class="chip" data-cat="roads" aria-pressed="false"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 21M16 3l4 18M12 4v2M12 10v3M12 17v3"/></svg></span><span data-i18n="cRoads">Roads</span></button></li>
       <li><button class="chip" data-cat="utilities" aria-pressed="false"><span class="chip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></span><span data-i18n="cUtil">Utilities</span></button></li>
@@ -138,7 +141,7 @@
     </ul>
 
     <div class="hero-actions">
-      <a class="btn btn-accent btn-glow" href="auth.html?next=submit.html#login"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="ctaSubmit">Submit a report</span></a>
+      <a class="btn btn-accent btn-glow" href="submit.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="ctaSubmit">Submit a report</span></a>
     </div>
   </div>
 
@@ -225,7 +228,7 @@
   </div>
 </section>
 
-<!-- ═════════ Latest reports (carousel) ═════════ -->
+<!-- ═════════ Latest reports (carousel, real data from search_public_reports) ═════════ -->
 <section class="block bg-c glow" id="reports" aria-labelledby="rep-title">
   <div class="wrap">
     <div class="section-head center reveal">
@@ -237,13 +240,17 @@
       <div class="viewport">
         <div class="track" id="track"></div>
       </div>
-      <div class="carousel-nav">
-        <button class="arrow" id="rep-prev" aria-label="Previous report"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+      <!-- shown when there are no public reports yet, or they didn't load -->
+      <div class="rep-empty" id="rep-empty" hidden>
+        <b id="rep-empty-title"></b>
+        <p id="rep-empty-text"></p>
+      </div>
+      <div class="carousel-nav" hidden>
+        <button class="arrow" id="rep-prev" aria-label="Предишен сигнал"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
         <div class="dots" id="rep-dots"></div>
-        <button class="arrow" id="rep-next" aria-label="Next report"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+        <button class="arrow" id="rep-next" aria-label="Следващ сигнал"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
       </div>
       <p class="all-link"><a class="btn btn-accent" href="reports.html"><span data-i18n="allReports">See all reports</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a></p>
-      <p class="sample-note" data-i18n="sample">Sample data for the prototype</p>
     </div>
   </div>
 </section>
@@ -263,9 +270,9 @@
       <li class="faq-item"><button class="faq-question" aria-expanded="false"><span data-i18n="q3">How long does it take to resolve a report?</span><span class="plus" aria-hidden="true"></span></button>
         <div class="faq-answer"><div><p data-i18n="a3">It depends on the problem and the responsible institution. You can follow every status change publicly until it's resolved.</p></div></div></li>
       <li class="faq-item"><button class="faq-question" aria-expanded="false"><span data-i18n="q4">What happens if my report is rejected?</span><span class="plus" aria-hidden="true"></span></button>
-        <div class="faq-answer"><div><p data-i18n="a4">You get a notification with the reason, so you can correct it or submit it again.</p></div></div></li>
+        <div class="faq-answer"><div><p data-i18n="a4">You get an email with the reason. You can also see it in My reports.</p></div></div></li>
       <li class="faq-item"><button class="faq-question" aria-expanded="false"><span data-i18n="q5">Which problems can I report?</span><span class="plus" aria-hidden="true"></span></button>
-        <div class="faq-answer"><div><p data-i18n="a5">Roads, street lighting, waste and illegal dumps, trees and green areas, water and sewage, and electricity.</p></div></div></li>
+        <div class="faq-answer"><div><p data-i18n="a5">Roads, utilities (lighting, electricity, water, gas, heating), environment, animals, construction, transport and public order, safety, and health and hygiene. If nothing fits, choose Other.</p></div></div></li>
       <li class="faq-item"><button class="faq-question" aria-expanded="false"><span data-i18n="q6">What should I do in an emergency?</span><span class="plus" aria-hidden="true"></span></button>
         <div class="faq-answer"><div><p data-i18n="a6">Call 112. Gas leaks, fallen cables, fire and other immediate dangers can't be handled through the platform.</p></div></div></li>
     </ul>
@@ -291,7 +298,7 @@
       <div>
         <h4 data-i18n="footLinks">Quick links</h4>
         <ul>
-          <li><a href="auth.html?next=submit.html#login" data-i18n="ctaSubmit">Submit a report</a></li>
+          <li><a href="submit.html" data-i18n="ctaSubmit">Submit a report</a></li>
           <li><a href="reports.html" data-i18n="navReports">Reports</a></li>
           <li><a href="letters.html" data-i18n="navLetters">Letters, complaints, FOI</a></li>
           <li><a href="help.html" data-i18n="navHelp">Help</a></li>
@@ -316,7 +323,7 @@
 </footer>
 
 <script src="js/common.js"></script>
-<script src="js/data.js"></script>
+<script src="js/public-data.js"></script>
 <script src="js/home.js"></script>
 </body>
 </html>

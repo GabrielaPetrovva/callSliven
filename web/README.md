@@ -1,35 +1,77 @@
-# CallSliven — frontend prototype
+# CallSliven — сайт (frontend)
 
-Open `index.html` in a browser (or serve the folder with any static server, e.g. VS Code Live Server).
+Чист HTML, CSS и JavaScript, без фреймуърк и без пакетиране. Всяка страница работи с истински данни от Supabase
+(проектът `callsliven-dev`). В `web/` няма примерни или тестови данни.
 
-## Structure
+Сайтът се отваря през локален сървър (напр. VS Code Live Server), не с двоен клик върху файла:
+сървърите на картата, Turnstile и Supabase не приемат заявки от `file://` страници.
+
+## Страници
+
+| Файл | Какво е | Достъп | Данни |
+|---|---|---|---|
+| `index.html` | Начална страница | всички | `search_public_reports` (4 най-нови), `categories` за чиповете |
+| `auth.html` | Вход, регистрация с код, забравена парола, втори фактор (`#login`, `#register`, `#forgot`) | всички | Supabase Auth |
+| `reports.html` | Всички сигнали: търсене, категория, период, сортиране + карта. Филтрите са в адреса, напр. `reports.html?cat=3&period=30` | всички | `search_public_reports`, `public_map_points` |
+| `report.html` | Един сигнал: `report.html?number=12` | всички | `get_public_report` |
+| `submit.html` | Подаване на сигнал на 4 стъпки | влязъл | `categories`, `subcategories`, `find_nearby_reports`, Storage `report-photos`, Edge Function `submit-report` |
+| `my-reports.html` | Моите сигнали, оттегляне | влязъл | `report_private`, `reports`, `report_events` (през RLS), `withdraw_report` |
+| `profile.html` | Име, фамилия, телефон | влязъл | `profiles` |
+| `mfa-setup.html` | Настройка на втори фактор (TOTP) | администратори | Supabase Auth MFA |
+| `privacy.html`, `terms.html` | Политика за поверителност и условия (**чернови**) | всички | — |
+
+Страница, която изисква вход, сама праща посетителя към `auth.html?next=<страницата>#login` и го връща обратно след входа.
+
+**Още ги няма** (линковете към тях дават 404): `admin.html`, `letters.html`, `help.html`.
+
+## Файлове
+
 ```
-index.html     home page
-auth.html      log in / sign up (tabs: auth.html#login, auth.html#register)
-reports.html   all reports: filters + list + map (filters live in the URL, e.g. reports.html?cat=roads&status=progress)
-report.html    one report: report.html?id=1075
 css/
-  base.css     shared: colours, Rubik font, buttons, navigation, footer, status pills, scroll reveal
-  home.css     home page only
-  auth.css     log in / sign up only
-  reports.css  reports list + map
-  report.css   single report
+  fonts.css      Rubik (самохостнат, fonts/)
+  base.css       общо: цветове, бутони, навигация, футър, статуси, падащи менюта, менюто на профила
+  home.css       начална страница
+  auth.css       вход и регистрация (и основата на mfa-setup, privacy, terms)
+  pages.css      общи елементи на страниците без основна навигация (mfa-setup, privacy, terms)
+  legal.css      privacy и terms
+  profile.css    полета, карти, съобщения (profile, submit, my-reports)
+  submit.css     формата за сигнал
+  my-reports.css моите сигнали
+  reports.css    списък и карта
+  report.css     един сигнал
 js/
-  config.js    settings: map key (MAPTILER_KEY) — the only file you need to edit
-  common.js    shared: language EN/BG, navigation, mobile menu, scroll reveal, helpers (window.CS)
-  data.js      categories / sub-categories / priorities / institutions (from the agreed table),
-               districts and SAMPLE reports (window.CSDATA) — replace with API data later
-  home.js, auth.js, reports.js, report.js   one script per page
-assets/        photos: gerb.png, slide-1.jpg, slide-2.jpg, slide-3.jpg, why-bg.jpg, auth.jpg
+  config.js      настройки — единственият файл, който се редактира (виж по-долу)
+  sb.js          единственият Supabase клиент за сайта (window.SB)
+  common.js      общо: език BG/EN, навигация, менюто на профила, кой е влязъл, падащо меню, плочки на картата (window.CS)
+  public-data.js статуси, цветове и иконки за публичните страници (window.PUB)
+  otp.js         полето за 6-цифрен код (auth, mfa-setup)
+  legal.js       privacy и terms (бутон „нагоре“)
+  home.js, auth.js, reports.js, report.js, submit.js, my-reports.js, profile.js, mfa-setup.js — по един за страница
+vendor/          самохостнати библиотеки с фиксирани версии: Leaflet 1.9.4, supabase-js 2.118.0
+assets/          снимки: gerb.png, slide-1..3.jpg, why-bg.jpg, auth.jpg
+fonts/           Rubik (latin, cyrillic; 400–700)
 ```
 
-## External libraries
-- Font: Rubik (Google Fonts)
-- Map: Leaflet 1.9.4 (cdnjs). Tiles: MapTiler if a key is set in js/config.js, otherwise CARTO light (no key);
-  if a provider fails, the next one (CARTO → OpenStreetMap) is tried automatically.
-- Open the site through a local server (e.g. VS Code Live Server), not by double-clicking the file:
-  some map servers refuse requests from file:// pages.
+Страниците с основната навигация не зареждат supabase-js сами: `common.js` го зарежда, когато потрябва
+(запазена сесия или страница, която чете от базата).
 
-## Notes
-- Forms do not send real requests yet (design only).
-- Photos of reports are never shown publicly; the map shows an approximate area.
+## Настройки (`js/config.js`)
+
+Всичко в този файл е **публично по замисъл** — браузърът има нужда от него. Тайните ключове
+(`service_role`, Turnstile secret, Resend) са само в Supabase и никога не са тук.
+
+| Ключ | Какво е |
+|---|---|
+| `SUPABASE_URL`, `SUPABASE_ANON_KEY` | Project Settings → API. Сега `callsliven-dev`; при пускане — production проектът |
+| `TURNSTILE_SITE_KEY` | Публичният ключ на Turnstile; тайният е в Supabase → Authentication → Attack Protection |
+| `MAPTILER_KEY`, `MAPTILER_STYLE` | Плочки на картата. Празен ключ = CARTO без ключ. Преди пускане ограничи ключа до домейна в MapTiler |
+| `POLICY_VERSION` | Версия на политиката, записва се при регистрация. Вдигни я, когато `privacy.html` се промени |
+
+Картата: MapTiler (ако има ключ) → CARTO → OpenStreetMap. Ако един доставчик не отговаря, автоматично се пробва следващият.
+
+## Правила в кода
+
+- Текст от базата или от потребителя се слага с `textContent`, никога като HTML (SEC-5).
+- Без inline скриптове и `onerror` атрибути, за да може CSP да ги забрани (SEC-3).
+- Проверките в браузъра са само за удобство. Истинските правила са в базата (RLS) и в Edge Functions.
+- Снимките на сигналите никога не се показват публично, а мястото е приблизително.
