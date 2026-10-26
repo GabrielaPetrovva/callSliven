@@ -18,11 +18,12 @@
 | `my-reports.html` | Моите сигнали, оттегляне | влязъл | `report_private`, `reports`, `report_events` (през RLS), `withdraw_report` |
 | `profile.html` | Име, фамилия, телефон | влязъл | `profiles` |
 | `mfa-setup.html` | Настройка на втори фактор (TOTP) | администратори | Supabase Auth MFA |
+| `admin.html` | Админ панел: броячи „Изискват внимание“, списък с филтри, детайл на сигнал (`admin.html#n=12`) и действия: одобри, отхвърли, статус, класификация, дубликат, ограничи подателя. Изпращането към институция идва в част 3 | администратори с втори фактор | `admin_attention_counts`, `reports` + `report_admin` + `report_private`, `report_events`, `report_photos` (подписани линкове), `report_dispatches`, `institutions` (миграция 021), `staff_get_submitter_name`; действия: `admin_approve_suspicious`, `admin_reject_report`, `admin_change_status`, `admin_set_classification`, `admin_link_duplicate`, `admin_restrict_user` |
 | `privacy.html`, `terms.html` | Политика за поверителност и условия (**чернови**) | всички | — |
 
 Страница, която изисква вход, сама праща посетителя към `auth.html?next=<страницата>#login` и го връща обратно след входа.
 
-**Още ги няма** (линковете към тях дават 404): `admin.html`, `letters.html`, `help.html`.
+**Още ги няма** (линковете към тях дават 404): `letters.html`, `help.html`.
 
 ## Файлове
 
@@ -39,6 +40,7 @@ css/
   my-reports.css моите сигнали
   reports.css    списък и карта
   report.css     един сигнал
+  admin.css      админ панел
 js/
   config.js      настройки — единственият файл, който се редактира (виж по-долу)
   sb.js          единственият Supabase клиент за сайта (window.SB)
@@ -46,7 +48,7 @@ js/
   public-data.js статуси, цветове и иконки за публичните страници (window.PUB)
   otp.js         полето за 6-цифрен код (auth, mfa-setup)
   legal.js       privacy и terms (бутон „нагоре“)
-  home.js, auth.js, reports.js, report.js, submit.js, my-reports.js, profile.js, mfa-setup.js — по един за страница
+  home.js, auth.js, reports.js, report.js, submit.js, my-reports.js, profile.js, mfa-setup.js, admin.js — по един за страница
 vendor/          самохостнати библиотеки с фиксирани версии: Leaflet 1.9.4, supabase-js 2.118.0
 assets/          снимки: gerb.png, slide-1..3.jpg, why-bg.jpg, auth.jpg
 fonts/           Rubik (latin, cyrillic; 400–700)

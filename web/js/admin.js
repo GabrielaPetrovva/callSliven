@@ -43,7 +43,26 @@
       rejectT:'Причина за отхвърляне', rj_insufficient_info:'Недостатъчна информация', rj_out_of_scope:'Извън компетенциите на общината', rj_inappropriate:'Неприемливо съдържание', rj_spam:'Спам',
       inIn:x => `след ${x}`, ago:x => `преди ${x}`, uMin:n => `${n} мин`, uH:n => `${n} ч`, uD:n => `${n} ${n === 1 ? 'ден' : 'дни'}`,
       eLoad:'Данните не се заредиха. Провери връзката и натисни „Обнови“.', eDetail:'Сигналът не се зареди.',
-      eNotFound:'Няма сигнал с този номер.', eSession:'Сесията изтече. Влез отново.', docTitle:'Админ панел'
+      eNotFound:'Няма сигнал с този номер.', eSession:'Сесията изтече. Влез отново.', docTitle:'Админ панел',
+      // ── part 2: actions ──
+      actions:'Действия', aApprove:'Одобри', aReject:'Отхвърли', aStatus:'Смени статуса', aClassify:'Класификация', aDuplicate:'Дубликат', aRestrict:'Ограничи подателя',
+      cancel:'Отказ', confirm:'Потвърди',
+      fApproveX:'Сигналът става публичен на картата, а сроковете тръгват от сега. Пречистеният текст по-горе е това, което ще видят всички.',
+      fRejectReason:'Причина', fRejectNote:'Бележка до подателя', fRejectHint:'По желание. Подателят я вижда в имейла и в „Моите сигнали“. Не се публикува.',
+      fNewStatus:'Нов статус', fPublicNote:'Публична бележка', fNoteHint:'По желание. Вижда се публично в хронологията на сигнала.', fNoteReq:'Задължително при „Затворен“. Вижда се публично — кратко и без лични данни.',
+      fSub:'Подкатегория', fInst:'Институция', fPrio:'Приоритет', fReason:'Причина за промяната', fReasonHint:'Задължително. Записва се в журнала, не се публикува.',
+      fClassHint:'Промени само това, което е нужно. Сроковете се преизчисляват при нов приоритет.',
+      fMainNumber:'Номер на основния сигнал', fDupHint:'Този сигнал ще води към основния. Подателят ще следи хронологията на основния сигнал.',
+      fDays:'За колко дни', fRestrictHint:'Подателят няма да може да подава нови сигнали. Действието се записва в журнала.', days:n => n === 0 ? 'Свали ограничението' : `${n} ${n === 1 ? 'ден' : 'дни'}`,
+      okApprove:'Сигналът е одобрен', okReject:'Сигналът е отхвърлен', okStatus:'Статусът е сменен', okClassify:'Класификацията е сменена', okDuplicate:'Сигналът е свързан', okRestrict:'Подателят е ограничен', okUnrestrict:'Ограничението е свалено',
+      eShort:n => `Поне ${n} знака.`, eChoose:'Избери стойност.', eNumber:'Въведи номер на сигнал.',
+      e_version_conflict:'Друг администратор току-що промени сигнала. Заредихме новата версия — провери и опитай пак.',
+      e_invalid_transition:'Това действие не е позволено при сегашния статус на сигнала.', e_note_required:'При „Затворен“ напиши кратка публична причина (поне 5 знака).',
+      e_reason_required:'Напиши причина (поне 5 знака).', e_nothing_to_change:'Няма промяна за запазване.', e_invalid_subcategory:'Тази подкатегория не е активна.',
+      e_invalid_institution:'Тази институция не е активна.', e_invalid_main_report:'Няма такъв публичен основен сигнал (или той самият е дубликат).',
+      e_already_linked:'Сигналът вече е свързан или към него има свързани сигнали.', e_not_in_review:'Сигналът вече не чака преглед.',
+      e_needs_review:'Първо одобри сигнала.', e_invalid_days:'Избери от 0 до 7 дни.', e_invalid_target:'Може да се ограничи само гражданин.',
+      e_not_staff:'Сесията без втори фактор е изтекла. Влез отново.', e_report_not_found:'Сигналът не е намерен.', eAction:'Действието не мина. Опитай отново.'
     },
     en: {
       aTitle:'Admin <em>panel</em>', refresh:'Refresh', lead:(n, t) => `Open reports: ${n} · updated at ${t}`,
@@ -80,7 +99,26 @@
       rejectT:'Reason for rejection', rj_insufficient_info:'Not enough information', rj_out_of_scope:"Outside the municipality's competence", rj_inappropriate:'Inappropriate content', rj_spam:'Spam',
       inIn:x => `in ${x}`, ago:x => `${x} ago`, uMin:n => `${n} min`, uH:n => `${n} h`, uD:n => `${n} ${n === 1 ? 'day' : 'days'}`,
       eLoad:"The data didn't load. Check the connection and press Refresh.", eDetail:"The report didn't load.",
-      eNotFound:'There is no report with this number.', eSession:'Your session expired. Log in again.', docTitle:'Admin panel'
+      eNotFound:'There is no report with this number.', eSession:'Your session expired. Log in again.', docTitle:'Admin panel',
+      // ── part 2: actions ──
+      actions:'Actions', aApprove:'Approve', aReject:'Reject', aStatus:'Change status', aClassify:'Classification', aDuplicate:'Duplicate', aRestrict:'Restrict submitter',
+      cancel:'Cancel', confirm:'Confirm',
+      fApproveX:'The report becomes public on the map and the deadlines start now. The cleaned text above is what everyone will see.',
+      fRejectReason:'Reason', fRejectNote:'Note to the submitter', fRejectHint:'Optional. The submitter sees it in the email and in My reports. Not published.',
+      fNewStatus:'New status', fPublicNote:'Public note', fNoteHint:'Optional. Shown publicly in the report timeline.', fNoteReq:'Required for "Closed". Shown publicly — short and without personal data.',
+      fSub:'Subcategory', fInst:'Institution', fPrio:'Priority', fReason:'Reason for the change', fReasonHint:'Required. Saved in the log, not published.',
+      fClassHint:'Change only what is needed. Deadlines are recalculated for a new priority.',
+      fMainNumber:'Number of the main report', fDupHint:'This report will point to the main one. The submitter will follow the main report timeline.',
+      fDays:'For how many days', fRestrictHint:'The submitter cannot send new reports. The action is saved in the log.', days:n => n === 0 ? 'Lift the restriction' : `${n} ${n === 1 ? 'day' : 'days'}`,
+      okApprove:'Report approved', okReject:'Report rejected', okStatus:'Status changed', okClassify:'Classification changed', okDuplicate:'Report linked', okRestrict:'Submitter restricted', okUnrestrict:'Restriction lifted',
+      eShort:n => `At least ${n} characters.`, eChoose:'Choose a value.', eNumber:'Enter a report number.',
+      e_version_conflict:'Another administrator just changed this report. We loaded the new version — check it and try again.',
+      e_invalid_transition:'This action is not allowed for the current status.', e_note_required:'For "Closed" write a short public reason (at least 5 characters).',
+      e_reason_required:'Write a reason (at least 5 characters).', e_nothing_to_change:'There is nothing to save.', e_invalid_subcategory:'This subcategory is not active.',
+      e_invalid_institution:'This institution is not active.', e_invalid_main_report:'There is no such public main report (or it is a duplicate itself).',
+      e_already_linked:'The report is already linked, or other reports are linked to it.', e_not_in_review:'The report is no longer awaiting review.',
+      e_needs_review:'Approve the report first.', e_invalid_days:'Choose 0 to 7 days.', e_invalid_target:'Only a citizen can be restricted.',
+      e_not_staff:'Your second-factor session expired. Log in again.', e_report_not_found:'Report not found.', eAction:"The action didn't go through. Try again."
     }
   });
 
@@ -330,6 +368,7 @@
 
   async function openDetail(number) {
     const my = ++dSeq;
+    if (number !== openNumber) actOpen = null;
     openNumber = number;
     $$('.a-row').forEach(li => li.classList.toggle('selected', li.querySelector('.a-num').textContent === '№' + number));
     $('#detail').hidden = false; $('#grid').classList.add('with-detail'); document.body.classList.add('detail-open');
@@ -399,6 +438,7 @@
       head.append(link);
     }
     body.append(head);
+    renderActions(body);
 
     // suspicious reasons
     if (r.needs_review && (a.suspicious_reasons || []).length) {
@@ -542,6 +582,185 @@
       L.circleMarker(ll, { radius:9, color:'#fff', weight:3, fillColor:'#1F7A3A', fillOpacity:1 }).addTo(dMap);
       setTimeout(() => dMap && dMap.invalidateSize(), 60);
     }
+  }
+
+  /* ═════════ Part 2: actions (ADM-6, 7, 8, 9, 15) ═════════
+     Every action is a database function that checks the role and MFA, the allowed status change and the record
+     version (optimistic locking, ADM-15), and writes the history and the Audit Log in the same transaction.
+     The buttons only offer what the database would allow; the database still decides. */
+  const REJECT_REASONS = ['insufficient_info', 'out_of_scope', 'inappropriate', 'spam'];
+  const NEXT_STATUS = { new:['closed'], sent:['in_progress', 'resolved', 'closed'], in_progress:['resolved', 'closed'] };
+  let actOpen = null;          // which form is open: approve | reject | status | classify | duplicate | restrict
+
+  function availableActions(r, a, p, children) {
+    const list = [];
+    if (r.needs_review && r.status === 'new') list.push('approve');
+    if (r.status === 'new') list.push('reject');
+    if (!r.needs_review && NEXT_STATUS[r.status]) list.push('status');
+    if (OPEN.includes(r.status)) list.push('classify');
+    if (OPEN.includes(r.status) && !r.duplicate_of && !children.length) list.push('duplicate');
+    if (p.user_id) list.push('restrict');
+    return list;
+  }
+  const ACT = {
+    approve:  { key:'aApprove',  cls:'btn-accent' },
+    reject:   { key:'aReject',   cls:'btn-danger-soft' },
+    status:   { key:'aStatus',   cls:'btn-soft' },
+    classify: { key:'aClassify', cls:'btn-soft' },
+    duplicate:{ key:'aDuplicate',cls:'btn-soft' },
+    restrict: { key:'aRestrict', cls:'btn-danger-soft' }
+  };
+
+  function renderActions(body) {
+    const { r, children } = detail, a = r.report_admin || {}, p = r.report_private || {};
+    const list = availableActions(r, a, p, children);
+    if (!list.length) return;
+    const sec = el('section', 'd-actions');
+    sec.append(el('h3', 'd-h', CS.t('actions')));
+    const bar = el('div', 'act-bar');
+    list.forEach(k => {
+      const b = el('button', 'btn btn-sm ' + ACT[k].cls + (actOpen === k ? ' on' : ''), CS.t(ACT[k].key));
+      b.type = 'button'; b.setAttribute('aria-expanded', actOpen === k);
+      b.addEventListener('click', () => { actOpen = actOpen === k ? null : k; renderDetail(); });
+      bar.append(b);
+    });
+    sec.append(bar);
+    if (actOpen && list.includes(actOpen)) sec.append(actionForm(actOpen, r, a, p));
+    body.append(sec);
+  }
+
+  // small form helpers
+  function formField(labelKey, control, hintKey) {
+    const f = el('div', 'act-field');
+    const l = el('label', 'act-label', CS.t(labelKey));
+    if (control.id) l.htmlFor = control.id;
+    f.append(l, control);
+    if (hintKey) f.append(el('p', 'act-hint', CS.t(hintKey)));
+    return f;
+  }
+  function textArea(id, max) { const t = el('textarea', 'input act-input'); t.id = id; t.maxLength = max; t.rows = 3; return t; }
+  function ddBox(label, options, value, onChange) {
+    const box = el('div');
+    const dd = CS.dropdown(box, { label:() => CS.t(label), value, onChange });
+    dd.update(options, value);
+    return { box, dd };
+  }
+
+  function actionForm(kind, r, a, p) {
+    const form = el('form', 'act-form'); form.noValidate = true;
+    const err = el('p', 'act-err'); err.setAttribute('role', 'alert');
+    let read;                                   // returns { fn, args, ok } or throws a message key
+    if (kind === 'approve') {
+      form.append(el('p', 'act-text', CS.t('fApproveX')));
+      read = () => ({ fn:'admin_approve_suspicious', args:{}, ok:'okApprove' });
+    }
+    if (kind === 'reject') {
+      const reason = ddBox('fRejectReason', [{ value:'', label:'—' }, ...REJECT_REASONS.map(x => ({ value:x, label:CS.t('rj_' + x) }))], '');
+      const note = textArea('act-note', 500);
+      form.append(formField('fRejectReason', reason.box), formField('fRejectNote', note, 'fRejectHint'));
+      read = () => {
+        if (!reason.dd.value) throw 'eChoose';
+        return { fn:'admin_reject_report', args:{ p_reason:reason.dd.value, p_note:note.value.trim() || null }, ok:'okReject' };
+      };
+    }
+    if (kind === 'status') {
+      const opts = NEXT_STATUS[r.status].map(x => ({ value:x, label:CS.t('s_' + x) }));
+      const hint = el('p', 'act-hint');
+      const setHint = v => { hint.textContent = CS.t(v === 'closed' ? 'fNoteReq' : 'fNoteHint'); };
+      const target = ddBox('fNewStatus', opts, opts[0].value, setHint);
+      const note = textArea('act-note', 300);
+      const field = formField('fPublicNote', note); field.append(hint);
+      setHint(opts[0].value);
+      form.append(formField('fNewStatus', target.box), field);
+      read = () => {
+        const n = note.value.trim();
+        if (target.dd.value === 'closed' && n.length < 5) throw ['eShort', 5];
+        return { fn:'admin_change_status', args:{ p_new_status:target.dd.value, p_public_note:n || null }, ok:'okStatus' };
+      };
+    }
+    if (kind === 'classify') {
+      const subOpts = cats.flatMap(c => subs.filter(s => s.category_id === c.id).map(s => ({ value:String(s.id), label:c.name + ' · ' + s.name })));
+      const sub = ddBox('fSub', subOpts, String(r.subcategory_id));
+      const instOpts = insts.filter(i => i.active !== false || i.id === a.institution_id).map(i => ({ value:String(i.id), label:i.name }));
+      const inst = ddBox('fInst', [{ value:'', label:CS.t('noInst') }, ...instOpts], a.institution_id ? String(a.institution_id) : '');
+      const prio = ddBox('fPrio', ['critical', 'high', 'medium', 'low'].map(x => ({ value:x, label:CS.t('p_' + x) })), a.priority);
+      const reason = textArea('act-reason', 500);
+      form.append(el('p', 'act-text', CS.t('fClassHint')), formField('fSub', sub.box), formField('fInst', inst.box), formField('fPrio', prio.box),
+        formField('fReason', reason, 'fReasonHint'));
+      read = () => {
+        const args = {
+          p_subcategory_id: sub.dd.value !== String(r.subcategory_id) ? +sub.dd.value : null,
+          p_institution_id: inst.dd.value && inst.dd.value !== String(a.institution_id || '') ? +inst.dd.value : null,
+          p_priority: prio.dd.value !== a.priority ? prio.dd.value : null
+        };
+        if (args.p_subcategory_id === null && args.p_institution_id === null && args.p_priority === null) throw 'e_nothing_to_change';
+        if (reason.value.trim().length < 5) throw ['eShort', 5];
+        return { fn:'admin_set_classification', args:{ ...args, p_reason:reason.value.trim() }, ok:'okClassify' };
+      };
+    }
+    if (kind === 'duplicate') {
+      const num = el('input', 'input act-input'); num.id = 'act-main'; num.inputMode = 'numeric'; num.maxLength = 12; num.autocomplete = 'off';
+      form.append(formField('fMainNumber', num, 'fDupHint'));
+      read = () => {
+        const n = num.value.replace(/\D/g, '');
+        if (!n) throw 'eNumber';
+        if (+n === r.number) throw 'e_invalid_main_report';
+        return { fn:'admin_link_duplicate', args:{ p_main_number:+n }, ok:'okDuplicate' };
+      };
+    }
+    if (kind === 'restrict') {
+      const days = ddBox('fDays', [1, 2, 3, 4, 5, 6, 7, 0].map(n => ({ value:String(n), label:tr('days', n) })), '7');
+      const reason = textArea('act-reason', 500);
+      form.append(el('p', 'act-text', CS.t('fRestrictHint')), formField('fDays', days.box), formField('fReason', reason, 'fReasonHint'));
+      read = () => {
+        if (reason.value.trim().length < 5) throw ['eShort', 5];
+        const d = +days.dd.value;
+        return { fn:'admin_restrict_user', args:{ p_user_id:p.user_id, p_days:d, p_reason:reason.value.trim() }, ok:d ? 'okRestrict' : 'okUnrestrict', noVersion:true };
+      };
+    }
+
+    const nav = el('div', 'act-nav');
+    const go = el('button', 'btn btn-sm ' + (kind === 'reject' || kind === 'restrict' ? 'btn-danger' : 'btn-accent'));
+    go.type = 'submit'; go.innerHTML = '<span class="spin" aria-hidden="true"></span>'; go.append(el('span', null, CS.t(kind === 'approve' ? 'aApprove' : kind === 'reject' ? 'aReject' : 'confirm')));
+    const no = el('button', 'btn btn-sm btn-ghost', CS.t('cancel')); no.type = 'button';
+    no.addEventListener('click', () => { actOpen = null; renderDetail(); });
+    nav.append(no, go);
+    form.append(err, nav);
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      err.textContent = ''; err.classList.remove('show');
+      let job;
+      try { job = read(); }
+      catch (k) { err.textContent = Array.isArray(k) ? tr(k[0], k[1]) : CS.t(k); err.classList.add('show'); return; }
+      go.classList.add('loading'); go.disabled = true; no.disabled = true;
+      const args = job.noVersion ? job.args : { p_report_id:r.id, p_expected_version:a.version, ...job.args };
+      const { error } = await sb.rpc(job.fn, args);
+      go.classList.remove('loading'); go.disabled = false; no.disabled = false;
+      if (error) {
+        console.warn('[CallSliven] ' + job.fn + ':', error);
+        const code = ['version_conflict', 'invalid_transition', 'note_required', 'reason_required', 'nothing_to_change', 'invalid_subcategory',
+          'invalid_institution', 'invalid_main_report', 'already_linked', 'not_in_review', 'needs_review', 'invalid_days', 'invalid_target',
+          'not_staff', 'report_not_found'].find(c => (error.message || '').includes(c));
+        if (code === 'version_conflict') { actOpen = null; toast(CS.t('e_version_conflict')); return refreshAll(); }
+        err.textContent = CS.t(code ? 'e_' + code : 'eAction'); err.classList.add('show');
+        return;
+      }
+      actOpen = null;
+      toast(CS.t(job.ok));
+      refreshAll();
+    });
+    setTimeout(() => { const f = form.querySelector('textarea, input, .dd-btn'); f && f.focus({ preventScroll:true }); }, 30);
+    return form;
+  }
+
+  let toastT;
+  function toast(text) { const t = $('#toast'); t.textContent = text; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 3200); }
+  // after an action: the detail, the list and the counters all show the new state
+  async function refreshAll() {
+    const n = openNumber;
+    await Promise.all([loadCounts(), loadList(true)]);
+    if (n !== null) await openDetail(n);
   }
 
   /* ═════════ Hash: #n=<number> opens a report (links can be shared between staff) ═════════ */

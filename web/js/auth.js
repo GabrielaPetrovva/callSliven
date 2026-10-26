@@ -61,6 +61,7 @@
       eWeak:'Тази парола е твърде лесна или е изтекла в интернет. Избери друга.', eSame:'Новата парола трябва да е различна от старата.',
       eCaptcha:'Потвърди, че не си робот.', eCaptchaServer:'Сървърът не прие проверката срещу ботове. Изчакай отметката и опитай отново.', eCaptchaErr:c => `Проверката срещу ботове даде грешка ${c}.`, eCaptchaLoad:'Проверката срещу ботове не се зареди. Изключи блокера на реклами или презареди страницата.',
       eNetwork:'Няма връзка със сървъра. Провери интернета си и опитай отново.', eGeneric:'Нещо се обърка. Опитай отново.',
+      eEmailSend:'Не успяхме да изпратим писмото с кода. Опитай отново след малко.', eServer:'Сървърът върна грешка. Опитай отново след малко.',
       iCodeSent:'Изпратихме нов код.',
       st_new:'Нов', st_sent:'Изпратен', st_in_progress:'В обработка', st_resolved:'Решен', st_closed:'Затворен', showPw:'Покажи паролата', hidePw:'Скрий паролата', docTitle:'Вход'
     },
@@ -101,6 +102,7 @@
       eWeak:'This password is too easy or has leaked online. Choose another one.', eSame:'The new password must differ from the old one.',
       eCaptcha:"Confirm that you're not a robot.", eCaptchaServer:'The server did not accept the anti-bot check. Wait for the tick and try again.', eCaptchaErr:c => `The anti-bot check returned error ${c}.`, eCaptchaLoad:'The anti-bot check did not load. Turn off your ad blocker or reload the page.',
       eNetwork:'No connection to the server. Check your internet and try again.', eGeneric:'Something went wrong. Try again.',
+      eEmailSend:"We couldn't send the email with the code. Try again in a little while.", eServer:'The server returned an error. Try again in a little while.',
       iCodeSent:'We sent a new code.',
       st_new:'New', st_sent:'Sent', st_in_progress:'In progress', st_resolved:'Resolved', st_closed:'Closed', showPw:'Show password', hidePw:'Hide password', docTitle:'Log in'
     }
@@ -117,13 +119,18 @@
     // the raw answer from Supabase, for F12 → Console (no personal data in it)
     console.warn('[CallSliven] Supabase Auth:', error.status, error.code, error.message);
     const code = error.code || '', status = error.status;
-    if (status === 0 || error.name === 'AuthRetryableFetchError') return 'eNetwork';
+    // "no connection" only when the server did not answer at all; an answer with an error code is not a network problem
+    if (!status && error.name === 'AuthRetryableFetchError') return 'eNetwork';
+    if (status === 0) return 'eNetwork';
+    // the account was created but Supabase Auth could not send the email (SMTP / sender domain not verified)
+    if (/sending .*email|email.*send/i.test(error.message || '')) return 'eEmailSend';
     if (code === 'captcha_failed' || /captcha/i.test(error.message || '')) return 'eCaptchaServer';
     if (code === 'over_email_send_rate_limit') return 'eEmailLimit';
     if (code === 'over_request_rate_limit' || status === 429) return 'eTooMany';
     if (code === 'weak_password') return 'eWeak';
     if (code === 'same_password') return 'eSame';
     if (code === 'email_address_invalid' || code === 'validation_failed') return 'eEmail';
+    if (status >= 500) return 'eServer';
     return fallback;
   }
 
