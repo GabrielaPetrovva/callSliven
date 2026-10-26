@@ -159,6 +159,16 @@ textarea.act-input{min-height:84px;resize:vertical;line-height:1.5}
 .act-nav{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px}
 @media (max-width:600px){ .act-nav .btn{flex:1 1 auto} }
 
+/* part 3: sending */
+.act-rec{list-style:none;margin:0;padding:10px 12px;border-radius:12px;background:#fff;border:1px solid var(--line);display:flex;flex-direction:column;gap:4px;font-size:14px}
+.act-rec-mail{color:var(--muted);overflow-wrap:anywhere}
+.act-warn{padding:10px 12px;border-radius:12px;font-size:14px;font-weight:600;background:#FCEDEB;color:#B23A2E;border:1px solid #F3CDC8}
+.act-warn.soft{background:#FFFBEF;color:#7D5B00;border-color:#EED9A0;font-weight:500}
+.act-check{display:flex;align-items:flex-start;gap:10px;font-size:14.5px;font-weight:600;cursor:pointer}
+.act-check input{width:18px;height:18px;margin-top:3px;accent-color:var(--g-700);flex:none}
+.dis-btn{align-self:flex-start;margin-top:6px;min-height:36px;padding:0 14px;font-size:13.5px}
+.d-dispatch li.dis-manual{border-color:#EED9A0;background:#FFFCF2}
+
 @media (max-width:1280px){
   .tiles{grid-template-columns:repeat(4,minmax(0,1fr))}
   .filters{grid-template-columns:repeat(2,minmax(0,1fr))}

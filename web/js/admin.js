@@ -62,7 +62,20 @@
       e_invalid_institution:'Тази институция не е активна.', e_invalid_main_report:'Няма такъв публичен основен сигнал (или той самият е дубликат).',
       e_already_linked:'Сигналът вече е свързан или към него има свързани сигнали.', e_not_in_review:'Сигналът вече не чака преглед.',
       e_needs_review:'Първо одобри сигнала.', e_invalid_days:'Избери от 0 до 7 дни.', e_invalid_target:'Може да се ограничи само гражданин.',
-      e_not_staff:'Сесията без втори фактор е изтекла. Влез отново.', e_report_not_found:'Сигналът не е намерен.', eAction:'Действието не мина. Опитай отново.'
+      e_not_staff:'Сесията без втори фактор е изтекла. Влез отново.', e_report_not_found:'Сигналът не е намерен.', eAction:'Действието не мина. Опитай отново.',
+      // ── part 3: sending to institutions ──
+      aSend:'Изпрати към институцията', aResend:'Изпрати отново', aForward:'Отбележи като препратено',
+      fSendX:'Писмото съдържа номера, категорията, заглавието, пречистения текст, точното място и линкове към снимките (важат 7 дни). Името и контактите на подателя не се изпращат.',
+      fTo:'До', fCc:'Копие до', fNoEmail:'няма имейл — уведоми я ръчно и после отбележи „препратено“',
+      fDemo:e => `Реалното изпращане за тази институция е изключено. Писмото отива на демо имейла: ${e}.`, fDemoNone:'Реалното изпращане е изключено, а демо имейлът не е настроен. Super Admin трябва да го попълни.',
+      fResendX:n => `Това ще е опит ${n} от 5. Писмото се изпраща отново на всички получатели.`, fResendReason:'Причина за повторното изпращане',
+      fNoInstX:'Сигналът няма институция. Първо я избери от „Класификация“.', fPausedX:'Изпращанията са спрени от Super Admin.',
+      fForwardX:'Потвърди, че институцията е уведомена по друг начин (телефон, писмо).', fForwardQ:'Потвърждавам, че институцията е уведомена.',
+      okSend:'Писмото е в опашката за изпращане', okResend:'Писмото е в опашката отново', okForward:'Отбелязано като препратено',
+      pending:'Изпращането се обработва — обновява се само.', maxAttempts:'Достигнати са 5 опита за изпращане.',
+      e_sending_paused:'Изпращанията са спрени от Super Admin.', e_no_institution:'Сигналът няма институция. Избери я от „Класификация“.',
+      e_too_many_attempts:'Достигнати са 5 опита за изпращане.', e_no_demo_email:'Демо имейлът не е настроен. Super Admin трябва да го попълни.',
+      e_invalid_dispatch:'Това изпращане вече не чака ръчно уведомяване.', eTick:'Сложи отметката, за да потвърдиш.'
     },
     en: {
       aTitle:'Admin <em>panel</em>', refresh:'Refresh', lead:(n, t) => `Open reports: ${n} · updated at ${t}`,
@@ -118,7 +131,20 @@
       e_invalid_institution:'This institution is not active.', e_invalid_main_report:'There is no such public main report (or it is a duplicate itself).',
       e_already_linked:'The report is already linked, or other reports are linked to it.', e_not_in_review:'The report is no longer awaiting review.',
       e_needs_review:'Approve the report first.', e_invalid_days:'Choose 0 to 7 days.', e_invalid_target:'Only a citizen can be restricted.',
-      e_not_staff:'Your second-factor session expired. Log in again.', e_report_not_found:'Report not found.', eAction:"The action didn't go through. Try again."
+      e_not_staff:'Your second-factor session expired. Log in again.', e_report_not_found:'Report not found.', eAction:"The action didn't go through. Try again.",
+      // ── part 3: sending to institutions ──
+      aSend:'Send to the institution', aResend:'Send again', aForward:'Mark as forwarded',
+      fSendX:"The email contains the number, category, title, cleaned text, exact place and links to the photos (valid 7 days). The submitter's name and contacts are not sent.",
+      fTo:'To', fCc:'Copy to', fNoEmail:'no email — notify them by hand, then mark as forwarded',
+      fDemo:e => `Real sending is off for this institution. The email goes to the demo address: ${e}.`, fDemoNone:'Real sending is off and the demo address is not set. A Super Admin must fill it in.',
+      fResendX:n => `This will be attempt ${n} of 5. The email is sent again to all recipients.`, fResendReason:'Reason for sending again',
+      fNoInstX:'The report has no institution. Choose one in Classification first.', fPausedX:'Sending is paused by a Super Admin.',
+      fForwardX:'Confirm that the institution was notified another way (phone, letter).', fForwardQ:'I confirm the institution has been notified.',
+      okSend:'The email is in the send queue', okResend:'The email is in the queue again', okForward:'Marked as forwarded',
+      pending:'Sending in progress — this updates by itself.', maxAttempts:'All 5 send attempts are used.',
+      e_sending_paused:'Sending is paused by a Super Admin.', e_no_institution:'The report has no institution. Choose one in Classification.',
+      e_too_many_attempts:'All 5 send attempts are used.', e_no_demo_email:'The demo address is not set. A Super Admin must fill it in.',
+      e_invalid_dispatch:'This dispatch is no longer waiting for a manual notice.', eTick:'Tick the box to confirm.'
     }
   });
 
@@ -178,6 +204,7 @@
   let sb = null, cats = [], subs = [], insts = [], counts = null;
   const state = { view:'all', status:'open', cat:'', prio:'', sort:'newest', q:'' };
   let items = [], total = 0, seq = 0, failedIds = [];
+  let settings = null;         // app_settings: sending_enabled, demo_email (staff can read)
 
   const VIEWS = [
     { id:'all', key:'tAll', icon:'list' },
@@ -556,9 +583,15 @@
         li.append(el('span', 'dis-meta', [d.to_email, fmt(d.updated_at || d.created_at)].filter(Boolean).join(' · ')));
         if (d.resend_reason) li.append(el('span', 'dis-meta', CS.t('resendReason') + ': ' + d.resend_reason));
         if (d.error) li.append(el('span', 'dis-err', d.error));
+        if (d.status === 'manual') {                // institution without email: an administrator notifies it by hand
+          const fb = el('button', 'btn btn-sm btn-soft dis-btn', CS.t('aForward')); fb.type = 'button';
+          fb.addEventListener('click', () => { actOpen = 'forward'; forwardId = d.id; renderDetail(); });
+          li.append(fb);
+        }
         ul.append(li);
       });
       dsec.append(ul);
+      if (dispatches.some(d => d.status === 'queued' || d.status === 'sending')) dsec.append(el('p', 'd-note', CS.t('pending')));
     }
     body.append(dsec);
 
@@ -574,6 +607,11 @@
     tl.append(ol); body.append(tl);
 
     $('#d-loading').hidden = true; body.hidden = false;
+    // the queue is sent every minute (send-emails); while something waits, the detail checks again every 15 s
+    if (dispatches.some(d => d.status === 'queued' || d.status === 'sending')) {
+      const mySeq = dSeq, n = openNumber;
+      setTimeout(() => { if (mySeq === dSeq && openNumber === n && !actOpen && !document.hidden) openDetail(n); }, 15000);
+    }
     $('#detail').scrollTop = 0;
     if (dMap) { dMap.remove(); dMap = null; }
     if (ll && window.L) {
@@ -590,10 +628,14 @@
      The buttons only offer what the database would allow; the database still decides. */
   const REJECT_REASONS = ['insufficient_info', 'out_of_scope', 'inappropriate', 'spam'];
   const NEXT_STATUS = { new:['closed'], sent:['in_progress', 'resolved', 'closed'], in_progress:['resolved', 'closed'] };
-  let actOpen = null;          // which form is open: approve | reject | status | classify | duplicate | restrict
+  let actOpen = null;          // which form is open: send | resend | forward | approve | reject | status | classify | duplicate | restrict
+  let forwardId = null;        // the dispatch to mark as forwarded by hand
 
   function availableActions(r, a, p, children) {
     const list = [];
+    // part 3: the first send, then "send again" (up to 5 attempts in all)
+    const ds = detail.dispatches, attempts = ds.length ? Math.max(...ds.map(d => d.attempt)) : 0;
+    if (!r.needs_review && OPEN.includes(r.status) && attempts < 5) list.push(attempts ? 'resend' : 'send');
     if (r.needs_review && r.status === 'new') list.push('approve');
     if (r.status === 'new') list.push('reject');
     if (!r.needs_review && NEXT_STATUS[r.status]) list.push('status');
@@ -603,6 +645,8 @@
     return list;
   }
   const ACT = {
+    send:     { key:'aSend',     cls:'btn-accent' },
+    resend:   { key:'aResend',   cls:'btn-soft' },
     approve:  { key:'aApprove',  cls:'btn-accent' },
     reject:   { key:'aReject',   cls:'btn-danger-soft' },
     status:   { key:'aStatus',   cls:'btn-soft' },
@@ -614,7 +658,7 @@
   function renderActions(body) {
     const { r, children } = detail, a = r.report_admin || {}, p = r.report_private || {};
     const list = availableActions(r, a, p, children);
-    if (!list.length) return;
+    if (!list.length && actOpen !== 'forward') return;
     const sec = el('section', 'd-actions');
     sec.append(el('h3', 'd-h', CS.t('actions')));
     const bar = el('div', 'act-bar');
@@ -625,7 +669,7 @@
       bar.append(b);
     });
     sec.append(bar);
-    if (actOpen && list.includes(actOpen)) sec.append(actionForm(actOpen, r, a, p));
+    if (actOpen && (list.includes(actOpen) || actOpen === 'forward')) sec.append(actionForm(actOpen, r, a, p));
     body.append(sec);
   }
 
@@ -708,6 +752,43 @@
         return { fn:'admin_link_duplicate', args:{ p_main_number:+n }, ok:'okDuplicate' };
       };
     }
+    if (kind === 'send' || kind === 'resend') {
+      const ds = detail.dispatches, next = ds.length ? Math.max(...ds.map(d => d.attempt)) + 1 : 1;
+      form.append(el('p', 'act-text', kind === 'send' ? CS.t('fSendX') : tr('fResendX', next)));
+      // who gets it: the main institution and the copy (if any), as admin_send_report will choose
+      const rec = [[a.institution_id, 'fTo'], [a.cc_institution_id !== a.institution_id ? a.cc_institution_id : null, 'fCc']].filter(x => x[0]);
+      const ul = el('ul', 'act-rec');
+      let anyDemo = false;
+      rec.forEach(([id, key]) => {
+        const i = insts.find(x => x.id === id) || { name:'#' + id };
+        const li = el('li'); li.append(el('b', null, CS.t(key) + ': '), document.createTextNode(i.name));
+        li.append(el('span', 'act-rec-mail', i.email ? ' · ' + i.email : ' · ' + CS.t('fNoEmail')));
+        if (i.email && !i.real_send) anyDemo = true;
+        ul.append(li);
+      });
+      if (rec.length) form.append(ul);
+      const blocked = !a.institution_id ? 'fNoInstX' : settings && settings.sending_enabled === false ? 'fPausedX' : null;
+      if (blocked) form.append(el('p', 'act-warn', CS.t(blocked)));
+      else if (anyDemo) form.append(el('p', 'act-warn soft', settings && settings.demo_email ? tr('fDemo', settings.demo_email) : CS.t('fDemoNone')));
+      let reason = null;
+      if (kind === 'resend') { reason = textArea('act-reason', 500); form.append(formField('fResendReason', reason, 'fReasonHint')); }
+      read = () => {
+        if (blocked) throw blocked;
+        if (reason && reason.value.trim().length < 5) throw ['eShort', 5];
+        return { fn:'admin_send_report', args:{ p_reason:reason ? reason.value.trim() : null }, ok:kind === 'send' ? 'okSend' : 'okResend' };
+      };
+    }
+    if (kind === 'forward') {
+      const id = forwardId;
+      const chk = el('label', 'act-check');
+      const box = el('input'); box.type = 'checkbox'; box.id = 'act-fwd';
+      chk.append(box, el('span', null, CS.t('fForwardQ')));
+      form.append(el('p', 'act-text', CS.t('fForwardX')), chk);
+      read = () => {
+        if (!box.checked) throw 'eTick';
+        return { fn:'admin_mark_forwarded', args:{ p_dispatch_id:id }, ok:'okForward' };
+      };
+    }
     if (kind === 'restrict') {
       const days = ddBox('fDays', [1, 2, 3, 4, 5, 6, 7, 0].map(n => ({ value:String(n), label:tr('days', n) })), '7');
       const reason = textArea('act-reason', 500);
@@ -721,7 +802,7 @@
 
     const nav = el('div', 'act-nav');
     const go = el('button', 'btn btn-sm ' + (kind === 'reject' || kind === 'restrict' ? 'btn-danger' : 'btn-accent'));
-    go.type = 'submit'; go.innerHTML = '<span class="spin" aria-hidden="true"></span>'; go.append(el('span', null, CS.t(kind === 'approve' ? 'aApprove' : kind === 'reject' ? 'aReject' : 'confirm')));
+    go.type = 'submit'; go.innerHTML = '<span class="spin" aria-hidden="true"></span>'; go.append(el('span', null, CS.t({ approve:'aApprove', reject:'aReject', send:'aSend', resend:'aResend' }[kind] || 'confirm')));
     const no = el('button', 'btn btn-sm btn-ghost', CS.t('cancel')); no.type = 'button';
     no.addEventListener('click', () => { actOpen = null; renderDetail(); });
     nav.append(no, go);
@@ -741,7 +822,8 @@
         console.warn('[CallSliven] ' + job.fn + ':', error);
         const code = ['version_conflict', 'invalid_transition', 'note_required', 'reason_required', 'nothing_to_change', 'invalid_subcategory',
           'invalid_institution', 'invalid_main_report', 'already_linked', 'not_in_review', 'needs_review', 'invalid_days', 'invalid_target',
-          'not_staff', 'report_not_found'].find(c => (error.message || '').includes(c));
+          'not_staff', 'report_not_found', 'sending_paused', 'no_institution', 'too_many_attempts', 'no_demo_email', 'invalid_dispatch'
+        ].find(c => (error.message || '').includes(c));
         if (code === 'version_conflict') { actOpen = null; toast(CS.t('e_version_conflict')); return refreshAll(); }
         err.textContent = CS.t(code ? 'e_' + code : 'eAction'); err.classList.add('show');
         return;
@@ -757,9 +839,14 @@
   let toastT;
   function toast(text) { const t = $('#toast'); t.textContent = text; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 3200); }
   // after an action: the detail, the list and the counters all show the new state
+  async function loadSettings() {
+    const { data, error } = await sb.from('app_settings').select('sending_enabled, demo_email').maybeSingle();
+    if (error) console.warn('[CallSliven] app_settings:', error);
+    settings = data || null;
+  }
   async function refreshAll() {
     const n = openNumber;
-    await Promise.all([loadCounts(), loadList(true)]);
+    await Promise.all([loadCounts(), loadList(true), loadSettings()]);
     if (n !== null) await openDetail(n);
   }
 
@@ -805,6 +892,7 @@
       sb.from('institutions').select('id, name, email, real_send, active').order('name')
     ]);
     cats = c.data || []; subs = s.data || []; insts = i.data || [];
+    await loadSettings();
     if (i.error) console.warn('[CallSliven] institutions (migration 021 applied?):', i.error);
     renderTiles(); renderFilters();
     await Promise.all([loadCounts(), loadList(true)]);
