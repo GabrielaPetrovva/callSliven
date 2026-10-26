@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Админ панел · CallSliven</title>
+<!--
+  CallSliven — admin panel, part 1: attention counters, report list with filters, report detail (ADM-1, 3, 4, 5, 14).
+  Only for staff with a second factor (aal2): every table and function checks is_staff() in the database.
+  Reads: admin_attention_counts, reports + report_admin + report_private, report_events, report_photos (signed links),
+         report_dispatches, institutions (migration 021), staff_get_submitter_name.
+  Styles: fonts.css, base.css, profile.css (cards, alerts, buttons), leaflet.css, admin.css.
+  Scripts: supabase-js, config.js, sb.js, leaflet, common.js, admin.js.
+-->
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/profile.css">
+<link rel="stylesheet" href="vendor/leaflet-1.9.4/leaflet.css">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="page-admin">
+
+<a class="skip" href="#main" data-i18n="skip">Към съдържанието</a>
+
+<header class="navbar solid" id="navbar">
+  <nav class="nav-inner" aria-label="Main">
+    <a class="brand" href="index.html" aria-label="CallSliven – home">
+      <span class="crest" aria-hidden="true">
+        <svg viewBox="0 0 36 44" fill="none"><path d="M3 4h30v17c0 10.5-6.6 17.2-15 20C9.6 38.2 3 31.5 3 21V4z" fill="#1F6B34" stroke="#BFDB8C" stroke-width="1.6"/><path d="M9 25l5-7 4 4 3-5 6 8" stroke="#EEF3EA" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg>
+        <img src="assets/gerb.png" alt="">
+      </span>
+      <span class="brand-text">
+        <span class="brand-name">Call<em>Sliven</em></span>
+        <span class="brand-sub" data-i18n="brandSub">Reports for Sliven Municipality</span>
+      </span>
+    </a>
+
+    <ul class="nav-links" id="nav-links">
+      <li><a href="reports.html" data-i18n="navReports">Reports</a></li>
+      <li><a href="letters.html" data-i18n="navLetters">Letters, complaints, FOI</a></li>
+      <li><a href="help.html" data-i18n="navHelp">Help</a></li>
+    </ul>
+
+    <div class="nav-right">
+      <div class="lang" role="group" aria-label="Language">
+        <button id="lang-en" class="active" data-lang="en" aria-pressed="true">EN</button>
+        <button id="lang-bg" data-lang="bg" aria-pressed="false">BG</button>
+      </div>
+      <a class="login" href="auth.html#login">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span data-i18n="login">Log in</span>
+      </a>
+      <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+</header>
+
+<main id="main" class="page">
+  <div class="wrap">
+    <div class="page-head head-row">
+      <div>
+        <h1 data-i18n="aTitle">Админ <em>панел</em></h1>
+        <p class="lead" id="lead"></p>
+      </div>
+      <button type="button" class="btn btn-soft" id="refresh">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
+        <span data-i18n="refresh">Обнови</span>
+      </button>
+    </div>
+
+    <div class="alert" id="alert" role="alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span class="alert-text"></span></div>
+
+    <!-- not staff -->
+    <section class="card gate" id="denied" hidden>
+      <h2 data-i18n="deniedT">Нямаш достъп</h2>
+      <p data-i18n="deniedX">Тази страница е само за администраторите на общината.</p>
+      <a class="btn btn-accent" href="index.html" data-i18n="toHome">Към началото</a>
+    </section>
+
+    <div id="panel" hidden>
+      <!-- ═════════ Needs attention (ADM-4) ═════════ -->
+      <section class="attention" aria-labelledby="att-h">
+        <h2 class="sr-only" id="att-h" data-i18n="attTitle">Изискват внимание</h2>
+        <div class="tiles" id="tiles" role="tablist"></div>
+        <p class="sys-note" id="sys-note" hidden></p>
+      </section>
+
+      <!-- ═════════ Filters (ADM-3) ═════════ -->
+      <div class="filters" id="filters">
+        <form class="a-search" id="search-form" role="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <label for="q" class="sr-only" data-i18n="searchLabel">Търсене</label>
+          <input id="q" type="search" autocomplete="off" maxlength="100" data-i18n-ph="searchPh" placeholder="№ или текст от сигнала">
+        </form>
+        <div id="dd-status"></div>
+        <div id="dd-cat"></div>
+        <div id="dd-prio"></div>
+        <div id="dd-sort"></div>
+      </div>
+
+      <div class="admin-grid" id="grid">
+        <!-- ═════════ List ═════════ -->
+        <section class="list-col" aria-labelledby="list-h">
+          <div class="list-head">
+            <h2 id="list-h" class="list-title"></h2>
+            <span class="list-count" id="count"></span>
+          </div>
+          <div class="skeleton-wrap" id="loading"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+          <ol class="a-list" id="list" aria-live="polite"></ol>
+          <p class="a-empty" id="empty" hidden></p>
+          <button type="button" class="btn btn-soft more" id="more" hidden><span class="spin" aria-hidden="true"></span><span data-i18n="more">Покажи още</span></button>
+        </section>
+
+        <!-- ═════════ Detail (ADM-5) ═════════ -->
+        <aside class="detail-col" id="detail" aria-label="Детайл на сигнала" hidden>
+          <div class="detail-card">
+            <div class="d-top">
+              <button type="button" class="d-close" id="d-close" data-i18n-aria="close" aria-label="Затвори">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+              </button>
+            </div>
+            <div class="skeleton-wrap" id="d-loading"><div class="skeleton"></div><div class="skeleton"></div></div>
+            <div class="alert" id="d-alert" role="alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span class="alert-text"></span></div>
+            <div id="d-body" hidden></div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="vendor/supabase-js-2.118.0/supabase.js"></script>
+<script src="js/config.js"></script>
+<script src="js/sb.js"></script>
+<script src="vendor/leaflet-1.9.4/leaflet.js"></script>
+<script src="js/common.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

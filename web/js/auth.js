@@ -49,7 +49,7 @@
       mfaLost:'Нямаш достъп до приложението? Свържи се със Super Admin, за да нулира втория фактор.',
       privacy:'Политика за поверителност', terms:'Условия за ползване',
       stPwOkT:'Паролата е сменена', stPwOkX:'Излязохме от профила ти на всички устройства. Влез с новата парола.', actLogin:'Към вход',
-      eRequired:'Попълни това поле.', eEmail:'Въведи валиден имейл, напр. name@example.com.', eName:'Само букви, поне 2.',
+      eRequired:'Попълни това поле.', eEmail:'Въведи валиден имейл, напр. name@example.com.', eName:'Само букви от една азбука (кирилица или латиница), поне 2.',
       ePhone:'Въведи български номер, напр. +359 88 123 4567.', ePassword:`Паролата трябва да е поне ${PW_MIN} символа.`, ePasswordLong:`Паролата може да е най-много ${PW_MAX} символа.`,
       eMatch:'Паролите не съвпадат.', eConsent:'Трябва да се съгласиш, за да продължиш.',
       eLogin:'Грешен имейл или парола.', eLoginCaptcha:'Грешен имейл или парола. Потвърди, че не си робот, и опитай отново.',
@@ -89,7 +89,7 @@
       mfaLost:"Can't open your app? Contact a Super Admin to reset your second factor.",
       privacy:'Privacy policy', terms:'Terms of use',
       stPwOkT:'Password changed', stPwOkX:'We logged you out on every device. Log in with your new password.', actLogin:'Go to log in',
-      eRequired:'Fill in this field.', eEmail:'Enter a valid email, e.g. name@example.com.', eName:'Use letters only, at least 2.',
+      eRequired:'Fill in this field.', eEmail:'Enter a valid email, e.g. name@example.com.', eName:'Letters of one alphabet only (Cyrillic or Latin), at least 2.',
       ePhone:'Enter a Bulgarian number, e.g. +359 88 123 4567.', ePassword:`The password must be at least ${PW_MIN} characters.`, ePasswordLong:`The password can be at most ${PW_MAX} characters.`,
       eMatch:"Passwords don't match.", eConsent:'You need to agree to continue.',
       eLogin:'Wrong email or password.', eLoginCaptcha:"Wrong email or password. Confirm you're not a robot and try again.",
@@ -219,15 +219,18 @@
 
   /* ═════════ Field validation ═════════ */
   const reEmail = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-  const reName = /^[\p{L}][\p{L}\s'’-]{1,59}$/u;
-  const rePhone = /^(\+359|0)\s?\d{2,3}[\s-]?\d{2,3}[\s-]?\d{2,4}$/;
+  // same rules as the database (migration 022): 2–60 letters, space, ' ’ -, one alphabet only
+  const reName = /^\p{L}[\p{L} '’-]{1,59}$/u;
+  const mixedScript = v => /[Ѐ-ӿ]/.test(v) && /[A-Za-z]/.test(v);
+  // only plain spaces or dashes between the digits (the database rejects tabs and other blanks)
+  const rePhone = /^(\+359|0) ?\d{2,3}[ -]?\d{2,3}[ -]?\d{2,4}$/;
   function check(input) {
     const raw = input.type === 'checkbox' ? input.checked : input.value;
     const v = typeof raw === 'string' ? raw.trim() : raw;
     switch (input.dataset.rule) {
       case 'required': return v ? '' : 'eRequired';
       case 'email': return !v ? 'eRequired' : reEmail.test(v) ? '' : 'eEmail';
-      case 'name': return !v ? 'eRequired' : reName.test(v) ? '' : 'eName';
+      case 'name': return !v ? 'eRequired' : reName.test(v) && !mixedScript(v) ? '' : 'eName';
       case 'phone': return !v ? '' : rePhone.test(v) ? '' : 'ePhone';
       case 'password': return !raw ? 'eRequired' : raw.length < PW_MIN ? 'ePassword' : new TextEncoder().encode(raw).length > PW_MAX ? 'ePasswordLong' : '';
       case 'match': return !raw ? 'eRequired' : raw === $('#' + input.dataset.match).value ? '' : 'eMatch';

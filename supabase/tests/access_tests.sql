@@ -95,8 +95,8 @@ begin
   select s.institution_id into inst from public.subcategories s where s.id = sub;
 
   insert into auth.users (id, email, raw_user_meta_data, email_confirmed_at) values
-    (ua, 'tst16-a@example.invalid',  '{"first_name":"Тест","last_name":"А"}', now()),
-    (ub, 'tst16-b@example.invalid',  '{"first_name":"Тест","last_name":"Б"}', now()),
+    (ua, 'tst16-a@example.invalid',  '{"first_name":"Тест","last_name":"Първи"}', now()),
+    (ub, 'tst16-b@example.invalid',  '{"first_name":"Тест","last_name":"Втори"}', now()),
     (ad, 'tst16-ad@example.invalid', '{"first_name":"Тест","last_name":"Админ"}', now()),
     (sa, 'tst16-sa@example.invalid', '{"first_name":"Тест","last_name":"Супер"}', now());
   update public.profiles set created_at = now() - interval '10 days' where id in (ua, ub, ad, sa);
@@ -109,7 +109,7 @@ begin
   select out_report_id, out_number into r1, n1 from public.create_report(ua, gen_random_uuid(), sub,
     'Тестов сигнал едно', 'Описание на първия тестов сигнал, достатъчно дълго', 'Тестов сигнал едно',
     'Описание на първия тестов сигнал, достатъчно дълго', 42.6824, 26.3229);
-  select out_report_id, out_number into r2 from public.create_report(ub, gen_random_uuid(), sub,
+  select out_report_id, out_number into r2, n2 from public.create_report(ub, gen_random_uuid(), sub,
     'Тестов сигнал две', 'Описание на втория тестов сигнал, достатъчно дълго', 'Тестов сигнал две',
     'Описание на втория тестов сигнал, достатъчно дълго', 42.6924, 26.3329);
   select out_report_id, out_number into r3, n3 from public.create_report(ua, gen_random_uuid(), sub,
@@ -147,8 +147,7 @@ begin
   perform pg_temp.t16_expect('посетител', 'публичното търсене работи', 'select * from public.search_public_reports()', 'ok');
   perform pg_temp.t16_expect('посетител', 'публичната карта работи', 'select * from public.public_map_points()', 'ok');
   perform pg_temp.t16_count('посетител', 'вижда публичния сигнал по номер', format('select count(*) from public.get_public_report(%s)', n1), 1);
-  perform pg_temp.t16_count('посетител', 'търсенето намира тестовите сигнали', $q$select count(*) from public.search_public_reports('Тестов сигнал')$q$, 4);
-
+  perform pg_temp.t16_count('посетител', 'търсенето намира тестовите сигнали', format($q$select count(*) from public.search_public_reports('Тестов сигнал', p_limit => 50) where out_number in (%s, %s, %s, %s)$q$, n1, n2, n3, n4), 4);
   -- ===== Гражданин А =====
   perform pg_temp.t16_as('authenticated', ua);
   perform pg_temp.t16_count('гражданин А', 'вижда само своите report_private (чужди = 0)', format('select count(*) from public.report_private where user_id <> %L', ua), 0);
