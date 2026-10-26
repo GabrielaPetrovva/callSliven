@@ -12,7 +12,7 @@
       emailHint:'Смяната на имейла ще бъде добавена скоро.',
       save:'Запази промените', undo:'Отказ', saved:'Промените са запазени',
       since:'Профил от', consentT:'Съгласие с политиката', consentV:(v, d) => `версия ${v}, ${d}`, none:'—',
-      eRequired:'Попълни това поле.', eName:'Само букви, поне 2.', ePhone:'Въведи български номер, напр. +359 88 123 4567.',
+      eRequired:'Попълни това поле.', eName:'Само букви, поне 2.', eMixed:'Пиши само на кирилица или само на латиница.', ePhone:'Въведи български номер, напр. +359 88 123 4567.',
       eSave:'Промените не бяха запазени. Опитай отново.', eNetwork:'Няма връзка със сървъра. Опитай отново.', eLoad:'Профилът не се зареди. Презареди страницата.',
       docTitle:'Профил'
     },
@@ -24,13 +24,14 @@
       emailHint:'Changing your email will be added soon.',
       save:'Save changes', undo:'Cancel', saved:'Changes saved',
       since:'Profile since', consentT:'Privacy policy consent', consentV:(v, d) => `version ${v}, ${d}`, none:'—',
-      eRequired:'Fill in this field.', eName:'Use letters only, at least 2.', ePhone:'Enter a Bulgarian number, e.g. +359 88 123 4567.',
+      eRequired:'Fill in this field.', eName:'Use letters only, at least 2.', eMixed:'Use only Cyrillic or only Latin letters.', ePhone:'Enter a Bulgarian number, e.g. +359 88 123 4567.',
       eSave:"Your changes weren't saved. Try again.", eNetwork:'No connection to the server. Try again.', eLoad:"Your profile didn't load. Reload the page.",
       docTitle:'Profile'
     }
   });
 
   const reName = /^[\p{L}][\p{L}\s'’-]{1,59}$/u;
+  const reCyr = /[\u0400-\u04FF]/, reLat = /[A-Za-z]/;   // a name must not mix the two scripts
   const rePhone = /^(\+359|0)\s?\d{2,3}[\s-]?\d{2,3}[\s-]?\d{2,4}$/;
   const fields = { first_name:$('#p-first'), last_name:$('#p-last'), phone:$('#p-phone') };
   const form = $('#form-profile'), saveBtn = $('#save'), resetBtn = $('#reset'), alertEl = $('#alert');
@@ -39,7 +40,12 @@
   const ERR_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>';
   function check(input) {
     const v = input.value.trim();
-    if (input.dataset.rule === 'name') return !v ? 'eRequired' : reName.test(v) ? '' : 'eName';
+    if (input.dataset.rule === 'name') {
+      if (!v) return 'eRequired';
+      if (!reName.test(v)) return 'eName';
+      if (reCyr.test(v) && reLat.test(v)) return 'eMixed';
+      return '';
+    }
     if (input.dataset.rule === 'phone') return !v || rePhone.test(v) ? '' : 'ePhone';
     return '';
   }
