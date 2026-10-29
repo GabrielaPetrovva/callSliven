@@ -181,6 +181,7 @@ textarea.act-input{min-height:84px;resize:vertical;line-height:1.5}
   .detail-col{position:fixed;inset:64px 0 0;z-index:65;max-height:none;border-radius:0;background:rgba(18,68,36,.25);padding:12px}
   .detail-card{min-height:100%;border-radius:20px}
   body.detail-open{overflow:hidden}
+  body.menu-open .detail-col{z-index:55}   /* the open menu (inside the navbar, z-index 60) goes over the report detail */
   .filters{position:static}
 }
 @media (max-width:600px){

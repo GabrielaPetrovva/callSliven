@@ -75,7 +75,10 @@
 /* map */
 .map-col{position:sticky;top:var(--map-top, 250px)}
 .map-wrap{position:relative;height:calc(100vh - var(--map-top, 250px) - 16px);min-height:540px;border-radius:24px;overflow:hidden;border:1.5px solid var(--line);
-  box-shadow:0 24px 50px -32px rgba(18,68,36,.55);background:var(--g-50)}
+  box-shadow:0 24px 50px -32px rgba(18,68,36,.55);background:var(--g-50);
+  /* Leaflet gives its layers z-index 400–1000. Without this they compete with the whole page and cover the
+     navigation (z-index 60) — on phones the open menu showed the map on top of it. isolation keeps them inside the map. */
+  isolation:isolate}
 #map{position:absolute;inset:0;font-family:var(--sans)}
 .map-fallback{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--muted)}
 .map-legend{position:absolute;z-index:500;left:12px;bottom:12px;display:flex;flex-wrap:wrap;gap:6px 12px;padding:8px 12px;border-radius:14px;background:rgba(255,255,255,.94);

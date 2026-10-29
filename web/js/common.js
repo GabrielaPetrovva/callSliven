@@ -81,6 +81,9 @@
     /* Base map tiles: MapTiler (if a key is set in js/config.js) → CARTO light → OpenStreetMap.
        If a provider keeps failing, the next one is tried automatically. */
     tiles(map) {
+      // Leaflet gives its layers z-index 400–1000. Keep them inside the map, or they cover the navigation
+      // (z-index 60) — on phones the open menu showed the map on top of it. Every map on the site comes through here.
+      map.getContainer().style.isolation = 'isolate';
       const cfg = window.CS_CONFIG || {};
       const OSM = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
       const providers = [];
