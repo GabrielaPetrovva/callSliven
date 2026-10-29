@@ -12,6 +12,7 @@
          report_dispatches, institutions (migration 021), staff_get_submitter_name.
   Styles: fonts.css, base.css, profile.css (cards, alerts, buttons), leaflet.css, admin.css.
   Scripts: supabase-js, config.js, sb.js, leaflet, common.js, admin.js.
+  The "Super Admin" button (class super-only) is shown by common.js only to a Super Admin.
 -->
 <link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="css/base.css">
@@ -63,10 +64,16 @@
         <h1 data-i18n="aTitle">Админ <em>панел</em></h1>
         <p class="lead" id="lead"></p>
       </div>
-      <button type="button" class="btn btn-soft" id="refresh">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
-        <span data-i18n="refresh">Обнови</span>
-      </button>
+      <div class="head-actions">
+        <a class="btn btn-soft super-only" href="super-admin.html" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 8.7-8.7M16 7l3 3M18 5l2 2"/></svg>
+          <span data-i18n="superAdmin">Super Admin</span>
+        </a>
+        <button type="button" class="btn btn-soft" id="refresh">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
+          <span data-i18n="refresh">Обнови</span>
+        </button>
+      </div>
     </div>
 
     <div class="alert" id="alert" role="alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span class="alert-text"></span></div>

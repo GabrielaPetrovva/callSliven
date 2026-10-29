@@ -21,7 +21,7 @@
       footAbout:'Report everyday problems in Sliven and follow how they get fixed.', footLinks:'Quick links', footLegal:'Legal', footContact:'Contact',
       privacy:'Privacy policy', terms:'Terms of use', cookies:'Cookies',
       addr:'Sliven Municipality<br>1 Tsar Osvoboditel Sq., 8800 Sliven', call112:'Emergency? Call 112',
-      myReports:'My reports', profile:'Profile', adminPanel:'Admin panel', logout:'Log out', accountMenu:'Account menu',
+      myReports:'My reports', profile:'Profile', adminPanel:'Admin panel', superAdmin:'Super Admin', logout:'Log out', accountMenu:'Account menu',
       today:'today', yesterday:'yesterday', daysAgo:n => `${n} days ago`
     },
     bg: {
@@ -35,7 +35,7 @@
       footAbout:'Подай сигнал за проблем в Сливен и проследи как се решава.', footLinks:'Бързи връзки', footLegal:'Правна информация', footContact:'Контакт',
       privacy:'Политика за поверителност', terms:'Условия за ползване', cookies:'Бисквитки',
       addr:'Община Сливен<br>пл. „Цар Освободител“ 1, 8800 Сливен', call112:'Спешно? Звънни на 112',
-      myReports:'Моите сигнали', profile:'Профил', adminPanel:'Админ панел', logout:'Изход', accountMenu:'Меню на профила',
+      myReports:'Моите сигнали', profile:'Профил', adminPanel:'Админ панел', superAdmin:'Super Admin', logout:'Изход', accountMenu:'Меню на профила',
       today:'днес', yesterday:'вчера', daysAgo:n => `преди ${n} дни`
     }
   };
@@ -290,9 +290,12 @@
       try { const sb = await CS.client(); await sb.auth.signOut(); } catch (e) {}
       location.href = 'auth.html';
     },
-    /* replace the "Log in" link with the user menu, or put it back */
+    /* replace the "Log in" link with the user menu, or put it back.
+       Anything on the page with class "super-only" (and the menu link) shows only for a Super Admin.
+       This only hides links: the database still checks the role and MFA on every request. */
     renderUser(u) {
       CS.user = u;
+      $$('.super-only').forEach(x => { x.hidden = !u || u.role !== 'super_admin'; });
       const right = $('.nav-right');
       if (!right) return;
       let menu = $('#user-menu', right), login = $('.login', right);
@@ -316,6 +319,7 @@
             <a href="my-reports.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6M8 2h8v4H8z"/><rect x="4" y="4" width="16" height="18" rx="2.5"/><path d="M8 11h8M8 15h5"/></svg><span data-i18n="myReports">${CS.t('myReports')}</span></a>
             <a href="profile.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><span data-i18n="profile">${CS.t('profile')}</span></a>
             <a href="admin.html" class="staff-only" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.3 7.5 9.5 4.4-1.2 7.5-4.9 7.5-9.5V6L12 3z"/></svg><span data-i18n="adminPanel">${CS.t('adminPanel')}</span></a>
+            <a href="super-admin.html" class="super-only" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 8.7-8.7M16 7l3 3M18 5l2 2"/></svg><span data-i18n="superAdmin">${CS.t('superAdmin')}</span></a>
             <button type="button" class="user-logout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"/></svg><span data-i18n="logout">${CS.t('logout')}</span></button>
           </div>`;
         right.insertBefore(menu, login || $('.menu-toggle', right));
@@ -334,6 +338,7 @@
       $('.user-full', menu).textContent = [u.firstName, u.lastName].filter(Boolean).join(' ');
       $('.user-mail', menu).textContent = u.email || '';
       $('.staff-only', menu).hidden = !(u.role === 'admin' || u.role === 'super_admin');
+      $('.super-only', menu).hidden = u.role !== 'super_admin';
       const here = location.pathname.split('/').pop() || 'index.html';
       $$('.user-pop a', menu).forEach(x => x.classList.toggle('active', x.getAttribute('href') === here));
     },

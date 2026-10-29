@@ -1,7 +1,8 @@
-/* CallSliven — admin panel (loads after base.css and profile.css) */
-.page-admin .page{padding-top:clamp(104px,10vw,124px)}
+/* CallSliven — admin panel (loads after base.css and profile.css). super-admin.html uses it too. */
+.page-admin .page{padding-top:clamp(104px,10vw,124px);min-height:100vh}   /* short pages (no access) don't show the dark page background below */
 .page-admin .wrap{max-width:1500px}
 .head-row{flex-direction:row;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.head-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
 .page-head .lead:empty{display:none}
 .btn-soft{min-height:44px;padding:0 18px;font-size:14.5px;background:var(--g-50);color:var(--g-700);border:1.5px solid var(--g-200)}
 .btn-soft:hover{background:var(--g-100);border-color:var(--g-500);box-shadow:0 0 18px rgba(63,174,95,.25)}

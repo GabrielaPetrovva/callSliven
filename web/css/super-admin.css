@@ -1,0 +1,106 @@
+/* CallSliven — Super Admin page (loads after base.css, profile.css and admin.css, and reuses their look) */
+
+/* ═════════ Tabs ═════════ */
+.sa-tabs{display:inline-flex;flex-wrap:wrap;gap:4px;padding:5px;margin-bottom:18px;border-radius:999px;background:var(--g-50);border:1px solid var(--line)}
+.sa-tabs [role="tab"]{display:inline-flex;align-items:center;gap:9px;min-height:44px;padding:0 20px;border:0;border-radius:999px;background:none;
+  font-size:14.5px;font-weight:700;color:var(--muted);transition:background .3s var(--ease), color .3s, box-shadow .35s var(--ease)}
+.sa-tabs [role="tab"] svg{width:18px;height:18px;flex:none}
+.sa-tabs [role="tab"]:hover{color:var(--g-700)}
+.sa-tabs [role="tab"][aria-selected="true"]{background:#fff;color:var(--g-700);box-shadow:0 6px 18px -10px rgba(18,68,36,.45), 0 0 0 1px var(--g-200)}
+.sa-tab-flag{padding:1px 8px;border-radius:999px;background:var(--danger);color:#fff;font-size:11.5px;font-weight:700;animation:flag 2.4s ease-in-out infinite}
+@keyframes flag{50%{box-shadow:0 0 0 4px rgba(217,63,51,.18)}}
+.sa-pane{animation:rise .35s var(--ease)}
+.sa-toolbar{display:grid;grid-template-columns:minmax(260px,1.6fr) minmax(180px,.6fr);gap:10px;margin-bottom:8px}
+#pane-log .sa-toolbar{grid-template-columns:minmax(220px,320px)}
+.sa-hint{font-size:13.5px;color:var(--muted);margin:0 2px 14px;max-width:900px}
+
+/* ═════════ Accounts ═════════ */
+button.a-row-link{width:100%;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.sa-user{flex-direction:row;align-items:center;gap:14px}
+.sa-user-main{display:flex;flex-direction:column;gap:5px;min-width:0}
+.sa-ava{width:40px;height:40px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:700;color:#fff;
+  background:linear-gradient(140deg, var(--g-500), var(--g-700))}
+.sa-ava.big{width:56px;height:56px;font-size:19px}
+.a-row.off .sa-ava{background:#A7B4AA}
+.a-row.off .a-row-title{color:var(--muted)}
+.a-row-title.none,.d-title.none{color:var(--muted);font-weight:500}
+.ro-citizen{--c:#5D6B61;--bg:#F1F3F1}
+.ro-admin{--c:#1E7A37;--bg:#DFF2E2}
+.ro-super_admin{--c:#fff;--bg:var(--g-700)}
+.ro-you{--c:#3E5468;--bg:#E6ECF1}
+.u-off{--c:#B23A2E;--bg:#FBE9E7}
+.sa-u-head{flex-direction:row;align-items:center;gap:14px}
+.sa-u-head > div{display:flex;flex-direction:column;gap:6px;min-width:0}
+.d-box.sa-info{background:#EEF3F7;border:1px solid #D5E0EA;color:#2F4559}
+.d-box.sa-warn{background:#FFFBEF;border:1px solid #EED9A0;color:#6E5100}
+.fact.bad dd{color:#C8372C}
+.sa-link{margin-top:10px}
+.sa-role-x{min-height:2.6em}
+.sa-contact{margin-bottom:12px;padding:14px;border-radius:16px;background:var(--g-50);border:1.5px solid var(--g-200);animation:rise .35s var(--ease)}
+.sa-contact .facts div{background:#fff}
+.sa-contact .facts dd{font-size:16px;user-select:all}
+.sa-contact-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
+
+/* ═════════ Sending ═════════ */
+.sa-settings{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:14px;margin-bottom:26px}
+.sa-card{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:clamp(18px,2.4vw,24px);border-radius:22px;background:#fff;border:1.5px solid var(--line);
+  box-shadow:0 10px 24px -20px rgba(18,68,36,.4);transition:background .45s var(--ease), border-color .45s}
+.sa-card .act-form{align-self:stretch}
+.sa-card-top{display:flex;align-items:center;gap:12px}
+.sa-card-top h3{font-size:19px}
+.sa-card-x{font-size:14.5px;color:var(--muted);max-width:640px}
+.sa-state-dot{width:14px;height:14px;flex:none;border-radius:50%;background:var(--g-500);box-shadow:0 0 0 0 rgba(63,174,95,.5);animation:live 2.4s ease-out infinite}
+@keyframes live{0%{box-shadow:0 0 0 0 rgba(63,174,95,.5)}70%,100%{box-shadow:0 0 0 12px rgba(63,174,95,0)}}
+.sa-switch.is-off{background:#FFF8F7;border-color:#F1C7C2}
+.sa-switch.is-off .sa-state-dot{background:var(--danger);animation:none;box-shadow:0 0 0 5px rgba(217,63,51,.16)}
+.sa-switch.is-off h3{color:#B23A2E}
+.sa-demo-mail{font-size:17px;font-weight:700;overflow-wrap:anywhere}
+.sa-demo-mail.none{color:#946F00}
+.sa-sub-head{margin-top:0}
+.sa-inst .a-row-link{padding:12px 14px 12px 18px}
+.sa-inst-row.real .a-row-link::before{background:var(--g-500)}
+.sa-inst-row.off .a-row-title{color:var(--muted)}
+.sa-inst-line{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.sa-inst-main{display:flex;flex-direction:column;gap:4px;min-width:0}
+.sa-inst-line .btn{flex:none}
+.sa-inst .a-row-sub{overflow-wrap:anywhere}
+.v-confirmed{--c:#1E7A37;--bg:#F1FAF2}
+.v-partial{--c:#7D6100;--bg:#FBF4DC}
+.v-not_found{--c:#6E7671;--bg:#F1F2F1}
+
+/* ═════════ Log ═════════ */
+.sa-log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.sa-log-row{display:grid;grid-template-columns:170px minmax(0,1fr);gap:14px;padding:12px 16px 12px 18px;border-radius:14px;border:1px solid var(--line);background:#fff;position:relative;overflow:hidden}
+.sa-log-row::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:transparent}
+.sa-log-row.k-contact::before{background:#8D63C4}
+.sa-log-row.k-user::before{background:var(--g-500)}
+.sa-log-row.k-settings::before{background:#E0B12E}
+.sa-log-row.k-bad::before,.sa-log-row.lv-error::before{background:var(--danger)}
+.sa-log-row.lv-warning::before{background:#E0B12E}
+.sa-log-time{font-size:13px;color:var(--muted);font-weight:600;padding-top:1px}
+.sa-log-main{display:flex;flex-direction:column;gap:3px;min-width:0}
+.sa-log-top{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:14.5px}
+.sa-log-top .link{font-size:14px}
+.sa-log-target{font-weight:600}
+.sa-log-what{color:var(--muted);font-size:13.5px}
+.sa-log-who{font-size:13px;color:var(--muted)}
+.sa-log-reason{font-size:14px;overflow-wrap:anywhere}
+.sa-log-msg{font-size:14px;overflow-wrap:anywhere}
+.lv-info{--c:#3E5468;--bg:#E6ECF1}
+.lv-warning{--c:#7D5B00;--bg:#FCEFC4}
+.lv-error{--c:#B23A2E;--bg:#FBE9E7}
+
+@media (max-width:1000px){
+  .sa-settings{grid-template-columns:1fr}
+}
+@media (max-width:700px){
+  .sa-toolbar{grid-template-columns:1fr}
+  .sa-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-radius:18px}
+  .sa-tabs [role="tab"]{position:relative;justify-content:center;gap:6px;padding:0 6px;font-size:13.5px;border-radius:14px}
+  /* the "paused" mark becomes a red dot on the tab */
+  .sa-tab-flag{position:absolute;top:7px;right:7px;width:9px;height:9px;padding:0;font-size:0}
+  .sa-log-row{grid-template-columns:1fr;gap:4px}
+  .sa-inst-line{flex-direction:column;align-items:flex-start}
+}
+@media (max-width:420px){ .sa-tabs [role="tab"] svg{display:none} }
+@media (prefers-reduced-motion:reduce){ .sa-pane,.sa-contact{animation:none} .sa-state-dot,.sa-tab-flag{animation:none} }
