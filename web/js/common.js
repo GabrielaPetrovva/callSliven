@@ -22,7 +22,10 @@
       privacy:'Privacy policy', terms:'Terms of use', cookies:'Cookies',
       addr:'Sliven Municipality<br>1 Tsar Osvoboditel Sq., 8800 Sliven', call112:'Emergency? Call 112',
       myReports:'My reports', profile:'Profile', adminPanel:'Admin panel', superAdmin:'Super Admin', logout:'Log out', accountMenu:'Account menu',
-      today:'today', yesterday:'yesterday', daysAgo:n => `${n} days ago`
+      today:'today', yesterday:'yesterday', daysAgo:n => `${n} days ago`,
+      cTitle:'Updated privacy policy', cText:'The privacy policy has changed. To keep using your profile, read it and confirm.',
+      cVersion:'Version', cCheck:'I have read the new <a href="privacy.html" target="_blank" rel="noopener">Privacy policy</a> and accept the <a href="terms.html" target="_blank" rel="noopener">Terms of use</a>.',
+      cAccept:'Accept', cTick:'Tick the box to confirm.', cErr:"It didn't save. Check the connection and try again."
     },
     bg: {
       skip:'Към съдържанието', brandSub:'Сигнали за община Сливен',
@@ -36,7 +39,10 @@
       privacy:'Политика за поверителност', terms:'Условия за ползване', cookies:'Бисквитки',
       addr:'Община Сливен<br>пл. „Цар Освободител“ 1, 8800 Сливен', call112:'Спешно? Звънни на 112',
       myReports:'Моите сигнали', profile:'Профил', adminPanel:'Админ панел', superAdmin:'Super Admin', logout:'Изход', accountMenu:'Меню на профила',
-      today:'днес', yesterday:'вчера', daysAgo:n => `преди ${n} дни`
+      today:'днес', yesterday:'вчера', daysAgo:n => `преди ${n} дни`,
+      cTitle:'Обновена политика за поверителност', cText:'Политиката за поверителност е променена. За да продължиш да ползваш профила си, прочети я и потвърди.',
+      cVersion:'Версия', cCheck:'Прочетох новата <a href="privacy.html" target="_blank" rel="noopener">Политика за поверителност</a> и приемам <a href="terms.html" target="_blank" rel="noopener">Условията за ползване</a>.',
+      cAccept:'Приемам', cTick:'Сложи отметката, за да потвърдиш.', cErr:'Не се записа. Провери връзката и опитай пак.'
     }
   };
 
@@ -355,6 +361,68 @@
       CS.renderUser({ id:ctx.user.id, email:ctx.user.email, firstName:p.first_name, lastName:p.last_name, role:p.role });
       ctx.sb.auth.onAuthStateChange(evt => { if (evt === 'SIGNED_OUT') CS.renderUser(null); });
       document.dispatchEvent(new CustomEvent('cs:user', { detail: CS.user }));
+      CS.checkConsent(ctx);
+    },
+
+    /* ═════════ New privacy policy version (AUTH-2, privacy.html §10) ═════════
+       When POLICY_VERSION in js/config.js differs from the version saved in the profile, a window asks the person
+       to read the new policy and accept it, or log out. Nothing else on the page can be used until then.
+       The answer is saved by the database function accept_policy (migration 025) with the server time and an
+       Audit Log entry; the browser cannot write consent_version itself. */
+    async checkConsent(ctx) {
+      const want = (window.CS_CONFIG || {}).POLICY_VERSION;
+      const p = ctx && ctx.profile;
+      if (!want || !p || p.consent_version === want || $('#consent')) return;
+      if (!$('link[data-consent]')) {
+        const l = document.createElement('link');
+        l.rel = 'stylesheet'; l.href = 'css/consent.css'; l.dataset.consent = '1';
+        document.head.appendChild(l);
+      }
+      const back = document.createElement('div');
+      back.className = 'consent-back'; back.id = 'consent';
+      back.innerHTML = `
+        <div class="consent-box" role="dialog" aria-modal="true" aria-labelledby="consent-t" aria-describedby="consent-x">
+          <span class="consent-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.3 7.5 9.5 4.4-1.2 7.5-4.9 7.5-9.5V6L12 3z"/><path d="m9 12 2 2 4-4"/></svg></span>
+          <h2 id="consent-t" data-i18n="cTitle">${CS.t('cTitle')}</h2>
+          <p id="consent-x" data-i18n="cText">${CS.t('cText')}</p>
+          <p class="consent-ver"><span data-i18n="cVersion">${CS.t('cVersion')}</span>: <b></b></p>
+          <label class="consent-check"><input type="checkbox" id="consent-ok"><span data-i18n="cCheck">${CS.t('cCheck')}</span></label>
+          <p class="consent-err" role="alert"></p>
+          <div class="consent-nav">
+            <button type="button" class="btn consent-out" data-i18n="logout">${CS.t('logout')}</button>
+            <button type="button" class="btn btn-accent consent-yes"><span class="spin" aria-hidden="true"></span><span data-i18n="cAccept">${CS.t('cAccept')}</span></button>
+          </div>
+        </div>`;
+      $('.consent-ver b', back).textContent = want;
+      // everything behind the window is out of reach for the mouse, the keyboard and screen readers
+      const behind = $$('body > *').filter(e => e !== back && e.tagName !== 'SCRIPT');
+      behind.forEach(e => { e.inert = true; });
+      document.body.appendChild(back);
+      document.body.classList.add('consent-open');
+      const box = $('#consent-ok', back), err = $('.consent-err', back), yes = $('.consent-yes', back);
+      const showErr = key => { err.textContent = CS.t(key); err.classList.add('show'); };
+      back.addEventListener('keydown', e => {
+        if (e.key === 'Escape') e.preventDefault();          // the window cannot be skipped
+        if (e.key !== 'Tab') return;
+        const f = $$('a, input, button', back).filter(x => !x.disabled);
+        if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
+        else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
+      });
+      box.addEventListener('change', () => err.classList.remove('show'));
+      $('.consent-out', back).addEventListener('click', CS.logout);
+      yes.addEventListener('click', async () => {
+        if (!box.checked) { showErr('cTick'); box.focus(); return; }
+        yes.classList.add('loading'); yes.disabled = true;
+        const { error } = await ctx.sb.rpc('accept_policy', { p_version: want });
+        yes.classList.remove('loading'); yes.disabled = false;
+        if (error) { console.warn('[CallSliven] accept_policy:', error); showErr('cErr'); return; }
+        p.consent_version = want;
+        behind.forEach(e => { e.inert = false; });
+        document.body.classList.remove('consent-open');
+        back.remove();
+        document.dispatchEvent(new CustomEvent('cs:consent', { detail: want }));
+      });
+      setTimeout(() => box.focus(), 50);
     },
 
     /* optional photos (assets/…): drop the <img> if the file is missing, so the drawn placeholder shows.

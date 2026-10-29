@@ -17,5 +17,5 @@ window.CS_CONFIG = {
   TURNSTILE_SITE_KEY: '0x4AAAAAAFYmf1nodSzjQ7e6',
 
   /* AUTH-2: saved in profiles.consent_version at sign-up. Raise it when privacy.html changes. */
-  POLICY_VERSION: 'v1'
+  POLICY_VERSION: 'v2'
 };

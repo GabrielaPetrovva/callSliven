@@ -71,7 +71,7 @@
       'a_report.linked_duplicate':'Свързан като дубликат', 'a_report.sent':'Изпратен към институция', 'a_report.resent':'Изпратен отново',
       'a_dispatch.failed':'Неуспешна доставка', 'a_dispatch.forwarded_manually':'Отбелязан като препратен ръчно',
       'a_user.restricted':'Ограничен акаунт', 'a_user.role_changed':'Сменена роля или състояние', 'a_contact.accessed':'Прегледани имейл и телефон',
-      'a_settings.changed':'Сменени настройки за изпращане', 'a_institution.real_send_changed':'Реално изпращане за институция',
+      'a_settings.changed':'Сменени настройки за изпращане', 'a_institution.real_send_changed':'Реално изпращане за институция', 'a_consent.accepted':'Прието ново съгласие с политиката',
       dFrom:(a, b) => `${a} → ${b}`, dAttempt:n => `опит ${n}`, dDays:n => n === 0 ? 'ограничението е свалено' : `за ${n} ${n === 1 ? 'ден' : 'дни'}`,
       dSuspicious:'скрит до преглед', dDemoChanged:'сменен демо имейл', dOn:'включено', dOff:'изключено', dActive:'активен', dInactive:'деактивиран',
       dSub:'подкатегория', dInst:'институция', dPrio:'приоритет', dMain:n => `към №${n}`, dWebhook:'по известие от доставчика',
@@ -148,7 +148,7 @@
       'a_report.linked_duplicate':'Linked as a duplicate', 'a_report.sent':'Sent to the institution', 'a_report.resent':'Sent again',
       'a_dispatch.failed':'Delivery failed', 'a_dispatch.forwarded_manually':'Marked as forwarded by hand',
       'a_user.restricted':'Account restricted', 'a_user.role_changed':'Role or state changed', 'a_contact.accessed':'Email and phone viewed',
-      'a_settings.changed':'Sending settings changed', 'a_institution.real_send_changed':'Real sending for an institution',
+      'a_settings.changed':'Sending settings changed', 'a_institution.real_send_changed':'Real sending for an institution', 'a_consent.accepted':'New policy accepted',
       dFrom:(a, b) => `${a} → ${b}`, dAttempt:n => `attempt ${n}`, dDays:n => n === 0 ? 'restriction lifted' : `for ${n} ${n === 1 ? 'day' : 'days'}`,
       dSuspicious:'hidden until review', dDemoChanged:'demo email changed', dOn:'on', dOff:'off', dActive:'active', dInactive:'deactivated',
       dSub:'subcategory', dInst:'institution', dPrio:'priority', dMain:n => `to #${n}`, dWebhook:'from the provider notice',
@@ -720,6 +720,7 @@
         return parts.join(', ');
       }
       case 'institution.real_send_changed': return from(d, v => CS.t(v ? 'dOn' : 'dOff'));
+      case 'consent.accepted': return d.version ? CS.t('cVersion') + ' ' + d.version : '';
       default: return '';
     }
   }

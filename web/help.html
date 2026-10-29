@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- CallSliven — Help: how to report, statuses, categories (live from the database), what is public, FAQ. -->
+<title>Помощ · CallSliven</title>
+<meta name="description" content="Как се подава сигнал в CallSliven, какво значат статусите, какво може да се подаде и какво се вижда публично.">
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/info.css">
+</head>
+<body class="page-info">
+
+<a class="skip" href="#main" data-i18n="skip">Към съдържанието</a>
+
+<header class="navbar solid" id="navbar">
+  <nav class="nav-inner" aria-label="Main">
+    <a class="brand" href="index.html" aria-label="CallSliven – home">
+      <span class="crest" aria-hidden="true">
+        <svg viewBox="0 0 36 44" fill="none"><path d="M3 4h30v17c0 10.5-6.6 17.2-15 20C9.6 38.2 3 31.5 3 21V4z" fill="#1F6B34" stroke="#BFDB8C" stroke-width="1.6"/><path d="M9 25l5-7 4 4 3-5 6 8" stroke="#EEF3EA" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg>
+        <img src="assets/gerb.png" alt="">
+      </span>
+      <span class="brand-text">
+        <span class="brand-name">Call<em>Sliven</em></span>
+        <span class="brand-sub" data-i18n="brandSub">Reports for Sliven Municipality</span>
+      </span>
+    </a>
+
+    <ul class="nav-links" id="nav-links">
+      <li><a href="reports.html" data-i18n="navReports">Reports</a></li>
+      <li><a href="letters.html" data-i18n="navLetters">Letters, complaints, FOI</a></li>
+      <li><a href="help.html" data-i18n="navHelp">Help</a></li>
+    </ul>
+
+    <div class="nav-right">
+      <div class="lang" role="group" aria-label="Language">
+        <button id="lang-en" class="active" data-lang="en" aria-pressed="true">EN</button>
+        <button id="lang-bg" data-lang="bg" aria-pressed="false">BG</button>
+      </div>
+      <a class="login" href="auth.html#login">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span data-i18n="login">Log in</span>
+      </a>
+      <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+</header>
+
+<main id="main" class="info-page">
+  <div class="wrap info-wrap">
+
+    <header class="info-hero">
+      <span class="eyebrow" data-i18n="hEyebrow">Помощ</span>
+      <h1 data-i18n="hTitle">Как работи <em>CallSliven</em></h1>
+      <p class="lead" data-i18n="hLead"></p>
+      <nav class="info-toc" aria-label="На тази страница">
+        <a href="#how" data-i18n="tocHow">Как се подава</a>
+        <a href="#statuses" data-i18n="tocStatus">Статуси</a>
+        <a href="#what" data-i18n="tocWhat">Какво мога да подам</a>
+        <a href="#privacy" data-i18n="tocPrivacy">Лични данни</a>
+        <a href="#faq" data-i18n="tocFaq">Въпроси</a>
+      </nav>
+    </header>
+
+    <!-- ═════════ How to report ═════════ -->
+    <section class="info-sec" id="how" aria-labelledby="how-h">
+      <h2 id="how-h" data-i18n="howT">Как се подава <em>сигнал</em></h2>
+      <ol class="steps4 stagger">
+        <li><span class="step-n">1</span><h3 data-i18n="s1T"></h3><p data-i18n="s1X"></p></li>
+        <li><span class="step-n">2</span><h3 data-i18n="s2T"></h3><p data-i18n="s2X"></p></li>
+        <li><span class="step-n">3</span><h3 data-i18n="s3T"></h3><p data-i18n="s3X"></p></li>
+        <li><span class="step-n">4</span><h3 data-i18n="s4T"></h3><p data-i18n="s4X"></p></li>
+      </ol>
+      <div class="info-after reveal">
+        <div>
+          <h3 data-i18n="afterT"></h3>
+          <p data-i18n="afterX"></p>
+        </div>
+        <div class="info-ctas">
+          <a class="btn btn-accent" href="submit.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            <span data-i18n="ctaSubmit">Подай сигнал</span>
+          </a>
+          <a class="btn btn-line" href="reports.html" data-i18n="ctaReports">Разгледай сигналите</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════════ Statuses ═════════ -->
+    <section class="info-sec" id="statuses" aria-labelledby="st-h">
+      <h2 id="st-h" data-i18n="stT">Статуси на <em>сигнала</em></h2>
+      <ol class="st-list reveal" id="st-list"></ol>
+      <p class="info-note" data-i18n="stNote"></p>
+    </section>
+
+    <!-- ═════════ What can be reported (from the database) ═════════ -->
+    <section class="info-sec" id="what" aria-labelledby="what-h">
+      <h2 id="what-h" data-i18n="whatT">Какво мога да <em>подам</em></h2>
+      <p class="info-sub" data-i18n="whatX"></p>
+      <div class="cat-grid" id="cats-loading"><div class="sk"></div><div class="sk"></div><div class="sk"></div></div>
+      <div class="cat-grid" id="cats" aria-live="polite"></div>
+      <p class="info-note bad" id="cats-err" data-i18n="catsErr" hidden></p>
+      <aside class="urgent reveal">
+        <span class="urgent-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></span>
+        <div><b data-i18n="urgentT">Спешно?</b><p data-i18n="urgentX"></p></div>
+      </aside>
+    </section>
+
+    <!-- ═════════ What is public (PUB-5) ═════════ -->
+    <section class="info-sec" id="privacy" aria-labelledby="priv-h">
+      <h2 id="priv-h" data-i18n="privT">Какво се вижда <em>публично</em></h2>
+      <div class="two-col stagger">
+        <div class="info-card yes">
+          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span data-i18n="pubT">Вижда се публично</span></h3>
+          <ul><li data-i18n="pub1"></li><li data-i18n="pub2"></li><li data-i18n="pub3"></li><li data-i18n="pub4"></li></ul>
+        </div>
+        <div class="info-card no">
+          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><span data-i18n="privHT">Не се публикува</span></h3>
+          <ul><li data-i18n="priv1"></li><li data-i18n="priv2"></li><li data-i18n="priv3"></li><li data-i18n="priv4"></li></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════════ FAQ ═════════ -->
+    <section class="info-sec" id="faq" aria-labelledby="faq-h">
+      <h2 id="faq-h" data-i18n="faqT">Често задавани <em>въпроси</em></h2>
+      <ul class="faq">
+        <li class="faq-item"><button class="faq-question" aria-expanded="false"><span data-i18n="q1"></span><span class="plus" aria-hidden="true"></span></button><div class="faq-answer"><div><p data-i18n="a1"></p></div></div></li>
+        <li class="faq-item"><button class="faq-question" aria-expanded="false"><span data-i18n="q2"></span><span class="plus" aria-hidden="true"></span></button><div class="faq-answer"><div><p data-i18n="a2"></p></div></div></li>
+        <li class="faq-item"><button class="faq-question" aria-expanded="false"><span data-i18n="q3"></span><span class="plus" aria-hidden="true"></span></button><div class="faq-answer"><div><p data-i18n="a3"></p></div></div></li>
+        <li class="faq-item"><button class="faq-question" aria-expanded="false"><span data-i18n="q4"></span><span class="plus" aria-hidden="true"></span></button><div class="faq-answer"><div><p data-i18n="a4"></p></div></div></li>
+        <li class="faq-item"><button class="faq-question" aria-expanded="false"><span data-i18n="q5"></span><span class="plus" aria-hidden="true"></span></button><div class="faq-answer"><div><p data-i18n="a5"></p></div></div></li>
+        <li class="faq-item"><button class="faq-question" aria-expanded="false"><span data-i18n="q6"></span><span class="plus" aria-hidden="true"></span></button><div class="faq-answer"><div><p data-i18n="a6"></p></div></div></li>
+        <li class="faq-item"><button class="faq-question" aria-expanded="false"><span data-i18n="q7"></span><span class="plus" aria-hidden="true"></span></button><div class="faq-answer"><div><p data-i18n="a7"></p></div></div></li>
+        <li class="faq-item"><button class="faq-question" aria-expanded="false"><span data-i18n="q8"></span><span class="plus" aria-hidden="true"></span></button><div class="faq-answer"><div><p data-i18n="a8"></p></div></div></li>
+      </ul>
+      <div class="info-contact reveal">
+        <h3 data-i18n="contactT">Не намери отговор?</h3>
+        <p data-i18n="contactX"></p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <a class="brand" href="index.html" aria-label="CallSliven – home">
+          <span class="crest" aria-hidden="true">
+            <svg viewBox="0 0 36 44" fill="none"><path d="M3 4h30v17c0 10.5-6.6 17.2-15 20C9.6 38.2 3 31.5 3 21V4z" fill="#1F6B34" stroke="#BFDB8C" stroke-width="1.6"/><path d="M9 25l5-7 4 4 3-5 6 8" stroke="#EEF3EA" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg>
+            <img src="assets/gerb.png" alt="">
+          </span>
+          <span class="brand-text"><span class="brand-name">Call<em>Sliven</em></span></span>
+        </a>
+        <p class="footer-about" data-i18n="footAbout">Report everyday problems in Sliven and follow how they get fixed.</p>
+      </div>
+      <div>
+        <h4 data-i18n="footLinks">Quick links</h4>
+        <ul>
+          <li><a href="submit.html" data-i18n="ctaSubmit">Submit a report</a></li>
+          <li><a href="reports.html" data-i18n="navReports">Reports</a></li>
+          <li><a href="letters.html" data-i18n="navLetters">Letters, complaints, FOI</a></li>
+          <li><a href="help.html" data-i18n="navHelp">Help</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 data-i18n="footLegal">Legal</h4>
+        <ul>
+          <li><a href="privacy.html" data-i18n="privacy">Privacy policy</a></li>
+          <li><a href="terms.html" data-i18n="terms">Terms of use</a></li>
+          <li><a href="privacy.html#storage" data-i18n="cookies">Cookies</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 data-i18n="footContact">Contact</h4>
+        <address><span data-i18n="addr">Sliven Municipality<br>1 Tsar Osvoboditel Sq., 8800 Sliven</span><br><a href="mailto:contact@callsliven.bg">contact@callsliven.bg</a></address>
+        <a class="btn-112" href="tel:112"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg><span data-i18n="call112">Emergency? Call 112</span></a>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2026 CallSliven</div>
+  </div>
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<script src="js/public-data.js"></script>
+<script src="js/help.js"></script>
+</body>
+</html>
