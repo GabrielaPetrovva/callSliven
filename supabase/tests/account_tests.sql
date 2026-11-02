@@ -55,9 +55,12 @@ begin
   update public.profiles set role = 'admin' where id = ud;
 
   -- сигнал на A, известие в опашката и временна снимка
-  insert into public.reports (id, title) values (rep, 'Тестов сигнал 026');
-  insert into public.report_private (report_id, user_id, idempotency_key, original_title)
-    values (rep, ua, gen_random_uuid(), 'Тестов сигнал 026');
+  insert into public.reports (id, subcategory_id, title, description, public_point)
+    values (rep, (select min(id) from public.subcategories), 'Тестов сигнал 026', 'Описание на тестовия сигнал за миграция 026',
+            extensions.st_setsrid(extensions.st_makepoint(26.32, 42.68), 4326));
+  insert into public.report_private (report_id, user_id, idempotency_key, original_title, original_description, exact_point)
+    values (rep, ua, gen_random_uuid(), 'Тестов сигнал 026', 'Описание на тестовия сигнал за миграция 026',
+            extensions.st_setsrid(extensions.st_makepoint(26.32, 42.68), 4326));
   insert into public.email_outbox (kind, user_id, report_id) values ('report_rejected', ua, rep);
   insert into storage.objects (bucket_id, name, owner, owner_id)
     values ('report-photos', 'tmp/' || ua || '/t26/test.jpg', ua, ua::text);
