@@ -49,8 +49,22 @@ mkdir -p "$work/$name"
 dump roles.sql --role-only
 dump schema.sql
 dump data.sql --use-copy --data-only -x "storage.buckets_vectors" -x "storage.vector_indexes"
-dump history_schema.sql --schema supabase_migrations
-dump history_data.sql --use-copy --data-only --schema supabase_migrations
+
+# Историята на миграциите съществува само ако те са пускани през Supabase CLI (supabase db push).
+# Миграциите на CallSliven се пускат ръчно в SQL Editor, затова схемата supabase_migrations обикновено я няма.
+history="няма (миграциите са пускани ръчно в SQL Editor)"
+echo "→ history_schema.sql"
+if supabase db dump --db-url "$SUPABASE_DB_URL" -f "$work/$name/history_schema.sql" --schema supabase_migrations \
+     2>"$work/history.err"; then
+  dump history_data.sql --use-copy --data-only --schema supabase_migrations
+  history="има (history_schema.sql, history_data.sql)"
+elif grep -q 'no matching schemas' "$work/history.err"; then
+  rm -f "$work/$name/history_schema.sql"
+  echo "  няма схема supabase_migrations: пропускам историята"
+else
+  cat "$work/history.err" >&2
+  exit 1
+fi
 
 # Проверка, че в данните наистина има редове (а не само схема)
 grep -q '^COPY ' "$work/$name/data.sql" || { echo "data.sql е без данни (няма COPY)" >&2; exit 1; }
@@ -59,6 +73,7 @@ grep -q '^COPY ' "$work/$name/data.sql" || { echo "data.sql е без данни
   echo "CallSliven: експорт на базата"
   echo "етикет: $label"
   echo "час (UTC): $stamp"
+  echo "история на миграциите: $history"
   echo "Снимките в Storage (bucket report-photos) не са в този архив."
   echo "Възстановяване: tools/backup/restore.sh <архив>"
 } > "$work/$name/README.txt"

@@ -49,10 +49,12 @@ psql --single-transaction --variable ON_ERROR_STOP=1 \
   --command 'SET session_replication_role = replica' \
   --file "$dir/data.sql" \
   --dbname "$RESTORE_DB_URL"
-psql --single-transaction --variable ON_ERROR_STOP=1 \
-  --file "$dir/history_schema.sql" \
-  --file "$dir/history_data.sql" \
-  --dbname "$RESTORE_DB_URL"
+if [[ -f "$dir/history_schema.sql" ]]; then
+  psql --single-transaction --variable ON_ERROR_STOP=1 \
+    --file "$dir/history_schema.sql" \
+    --file "$dir/history_data.sql" \
+    --dbname "$RESTORE_DB_URL"
+fi
 
 echo "Базата е възстановена. Остават ръчно: снимките в Storage, Edge Functions и тайните им,"
 echo "Vault (project_url, cron_secret), настройките на Auth (SMTP, шаблони, Site URL)."
