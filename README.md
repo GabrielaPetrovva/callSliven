@@ -1,127 +1,106 @@
-# CallSliven — сайт (frontend)
+# CallSliven
 
-Чист HTML, CSS и JavaScript, без фреймуърк и без пакетиране. Всяка страница работи с истински данни от Supabase
-(проектът `callsliven-dev`). В `web/` няма примерни или тестови данни.
+Платформа за граждански сигнали за Община Сливен (дипломен проект). Гражданинът подава сигнал с място и снимки,
+администраторът го преглежда и го изпраща към отговорната институция, а всеки следи статуса на публична карта.
 
-Сайтът се отваря през локален сървър (VS Code Live Server на `localhost:5500` с корен `/web`, виж `.vscode/settings.json`),
-не с двоен клик върху файла: картата, Turnstile и Supabase не приемат заявки от `file://` страници,
-а Turnstile приема само разрешени адреси (`localhost`).
+Как работи системата и докъде е стигнала работата: [`docs/PROJECT.md`](docs/PROJECT.md).
+Сайтът и страниците му: [`web/README.md`](web/README.md).
 
-## Страници
-
-| Файл | Какво е | Достъп | Данни |
-|---|---|---|---|
-| `index.html` | Начална страница | всички | `search_public_reports` (4 най-нови), `categories` за чиповете |
-| `auth.html` | Вход, регистрация с код, забравена парола, втори фактор (`#login`, `#register`, `#forgot`) | всички | Supabase Auth |
-| `reports.html` | Всички сигнали: търсене, категория, период, сортиране + карта. Филтрите са в адреса, напр. `reports.html?cat=3&period=30` | всички | `search_public_reports`, `public_map_points` |
-| `report.html` | Един сигнал: `report.html?number=12` | всички | `get_public_report` |
-| `submit.html` | Подаване на сигнал на 4 стъпки | влязъл | `categories`, `subcategories`, `find_nearby_reports`, Storage `report-photos`, Edge Function `submit-report` |
-| `my-reports.html` | Моите сигнали, оттегляне | влязъл | `report_private`, `reports`, `report_events` (през RLS), `withdraw_report` |
-| `profile.html` | Име, фамилия, телефон | влязъл | `profiles` |
-| `mfa-setup.html` | Настройка на втори фактор (TOTP) | служители | Supabase Auth MFA |
-| `admin.html` | Админ панел: изискват внимание, списък, детайл, действия, изпращане към институции | служители с втори фактор | виж „Админ панел“ |
-| `super-admin.html` | Акаунти и роли, контакти с причина, изпращане, журнал (`#accounts`, `#sending`, `#log`) | Super Admin с втори фактор | виж „Super Admin“ |
-| `privacy.html`, `terms.html` | Политика за поверителност и условия (**чернови**) | всички | — |
-
-Страница, която изисква вход, сама праща посетителя към `auth.html?next=<страницата>#login` и го връща обратно след входа.
-Служител без втори фактор отива на `mfa-setup.html`, а служител с фактор, но без въведен код, — на `auth.html` за кода.
-
-**Още ги няма** (линковете в навигацията дават 404): `letters.html` („Писма, жалби, ЗДОИ“), `help.html` („Помощ“).
-
-## Админ панел (`admin.html`)
-
-Достъпът се проверява в базата: всяка таблица и функция иска `is_staff()` (роля `admin` или `super_admin` и ниво `aal2`).
-Страницата само скрива това, което човек не може да ползва.
-
-- **Изискват внимание** (`admin_attention_counts`): подозрителни, критични, просрочена реакция, просрочено решаване,
-  неуспешна доставка, за ръчно уведомяване. Всяка плочка е филтър. Броячите се обновяват всяка минута.
-- **Списък:** търсене по номер или текст, филтри по статус, категория и приоритет, подреждане. Жълто = просрочена първа реакция,
-  червено = просрочено решаване.
-- **Детайл:** `admin.html#n=<номер>`. Текстът на подателя и пречистеният текст, име на подателя (`staff_get_submitter_name`),
-  срокове, институция, точен адрес и карта, снимки през подписани линкове (10 мин), изпращания, дубликати, хронология.
-- **Действия** (функции от миграция 012): одобряване, отхвърляне с причина, смяна на статус, класификация с причина,
-  дубликат, ограничаване на подателя до 7 дни. Всяко действие изпраща версията на записа; при `version_conflict` панелът
-  зарежда новата версия, вместо да презапише чужда промяна.
-- **Изпращане към институцията** (миграция 013): „Изпрати“, „Изпрати отново“ с причина (до 5 опита),
-  „Отбележи като препратено“ за институции без имейл. Докато писмото е в опашката, детайлът се обновява на 15 секунди.
-- Чете: `reports`, `report_admin`, `report_private`, `report_events`, `report_photos`, `report_dispatches`, `app_settings`,
-  `institutions` (миграция 021).
-
-## Super Admin (`super-admin.html`)
-
-Само за `super_admin` с ниво `aal2` (`is_super_admin()` във всяка функция). Всяка промяна иска причина и се записва в Audit Log.
-
-- **Акаунти** (SA-1): `super_admin_find_users` (миграция 023) — едно поле за име, **точен** имейл или номер на сигнал
-  (намира подателя); без търсене показва служителите. Смяна на роля и деактивиране през `super_admin_set_role`.
-  Базата не позволява да не остане нито един активен Super Admin. Засегнатият получава имейл.
-- **Контакти** (SA-3): имейл и телефон само с бутона „Покажи имейл и телефон“ и причина от поне 10 знака
-  (`super_admin_get_contact`). Пазят се само в паметта на страницата, докато акаунтът е отворен.
-  Другите Super Admin получават известие.
-- **Изпращане** (SA-2): „Спри всички изпращания“ и демо имейлът (`super_admin_update_settings`), реално изпращане по
-  институция (`super_admin_set_real_send`, само при имейл и потвърден контакт). Докато изпращанията са спрени,
-  нови не могат да се пуснат, а опашката към институциите чака (миграция 024).
-- **Журнал:** `super_admin_audit` (миграция 023) — действията с имена, номер на сигнал и причина, филтри по вид, по 50 на страница.
-  Отделно: системните събития (`system_events`, 30 дни).
-
-Първият Super Admin се прави ръчно: Supabase → Authentication → Add user (Auto Confirm), после
-`update public.profiles set role = 'super_admin', first_name = '…', last_name = '…' where id = …`.
-Следващите служители се повишават от страницата „Акаунти“.
-
-## Файлове
+## Структура
 
 ```
-css/
-  fonts.css       Rubik (самохостнат, fonts/)
-  base.css        общо: цветове, бутони, навигация, футър, статуси, падащи менюта, менюто на профила
-  home.css        начална страница
-  auth.css        вход и регистрация (и основата на mfa-setup, privacy, terms)
-  pages.css       общи елементи на страниците без основна навигация (mfa-setup, privacy, terms)
-  legal.css       privacy и terms
-  profile.css     полета, карти, съобщения (profile, submit, my-reports, admin, super-admin)
-  submit.css      формата за сигнал
-  my-reports.css  моите сигнали
-  reports.css     списък и карта
-  report.css      един сигнал
-  admin.css       админ панел (ползва се и от super-admin)
-  super-admin.css само за super-admin: раздели, акаунти, изпращане, журнал
-js/
-  config.js       настройки — единственият файл, който се редактира (виж по-долу)
-  sb.js           единственият Supabase клиент за сайта (window.SB)
-  common.js       общо: език BG/EN, навигация, менюто на профила, кой е влязъл, падащо меню, плочки на картата (window.CS)
-  public-data.js  статуси, цветове и иконки за публичните страници (window.PUB)
-  otp.js          полето за 6-цифрен код (auth, mfa-setup)
-  legal.js        privacy и terms (бутон „нагоре“)
-  home.js, auth.js, reports.js, report.js, submit.js, my-reports.js, profile.js, mfa-setup.js,
-  admin.js, super-admin.js — по един за страница
-vendor/           самохостнати библиотеки с фиксирани версии: Leaflet 1.9.4, supabase-js 2.118.0
-assets/           снимки: gerb.png, slide-1..3.jpg, why-bg.jpg, auth.jpg
-fonts/            Rubik (latin, cyrillic; 400–700)
+web/                     сайтът: HTML, CSS, JS без фреймуърк (виж web/README.md)
+firebase.json            Firebase Hosting: публикува web/ със CSP и защитните заглавки
+supabase/
+  migrations/            001–029: схема, RLS, функции, планирани задачи (пускат се по ред)
+  functions/
+    submit-report/       подаване на сигнал: Turnstile, лимити, снимки без EXIF, адрес, пречистване на текста
+    send-emails/         опашките с писма към институции и граждани (pg_cron всяка минута)
+    resend-webhook/      статус на доставката от Resend (подписът се проверява)
+    maintenance/         нощна поддръжка: стари временни снимки, снимки на обезличени сигнали, проверка на базата
+  tests/                 SQL тестове за правата и функциите (пускат се в SQL Editor)
+  config.toml            настройки за локален Supabase
+tools/
+  dev-submit.html        ръчен тест на submit-report
+  backup/                шифрован експорт и възстановяване на базата (SEC-9)
+.github/workflows/
+  backup.yml             седмичен шифрован експорт и ръчен експорт преди миграция
+docs/PROJECT.md          описание, решения и списък с напредъка
 ```
 
-Страниците с основната навигация не зареждат supabase-js сами: `common.js` го зарежда, когато потрябва
-(запазена сесия или страница, която чете от базата). `admin.html` и `super-admin.html` го зареждат направо.
+## Технологии
 
-Елемент с клас `staff-only` в менюто на профила се вижда само за служители, а всеки елемент с клас `super-only`
-(в менюто и на страниците) — само за Super Admin. Това само скрива линкове; правата се проверяват в базата.
+Supabase (Postgres 17 с PostGIS, pg_trgm, pg_cron, pgcrypto; Auth; Storage; Edge Functions на Deno),
+Cloudflare Turnstile, Resend, Geoapify, Leaflet с MapTiler / CARTO / OpenStreetMap, Firebase Hosting.
 
-## Настройки (`js/config.js`)
+## Локално
 
-Всичко в този файл е **публично по замисъл** — браузърът има нужда от него. Тайните ключове
-(`service_role`, Turnstile secret, Resend) са само в Supabase и никога не са тук.
+Сайтът: `firebase emulators:start --only hosting` → `http://localhost:5500` (със същите заглавки като на живо).
+Подробности в `web/README.md`.
 
-| Ключ | Какво е |
+Тестове на Edge Functions (Deno 2):
+
+```
+cd supabase/functions
+deno test
+```
+
+## База данни
+
+Миграциите се пускат по номер в SQL Editor на проекта. Всяка проверява сама себе си: при грешно име или брой
+спира с ясно съобщение и нищо не се записва. **Преди миграция в production** се прави експорт (виж „Резервни копия“).
+
+SQL тестовете в `supabase/tests/` създават тестови данни, проверяват и накрая връщат всичко назад. Затова завършват
+с нарочно „ERROR“, в който е резултатът, напр. „33 от 33 са наред“.
+
+| Файл | Проверява |
 |---|---|
-| `SUPABASE_URL`, `SUPABASE_ANON_KEY` | Project Settings → API. Сега `callsliven-dev`; при пускане — production проектът |
-| `TURNSTILE_SITE_KEY` | Публичният ключ на Turnstile; тайният е в Supabase → Authentication → Attack Protection |
-| `MAPTILER_KEY`, `MAPTILER_STYLE` | Плочки на картата. Празен ключ = CARTO без ключ. Преди пускане ограничи ключа до домейна в MapTiler |
-| `POLICY_VERSION` | Версия на политиката, записва се при регистрация. Вдигни я, когато `privacy.html` се промени |
+| `access_tests.sql` | кой какво може да чете и вика (посетител, граждани A и B, администратор, Super Admin) |
+| `super_admin_tests.sql` | търсене на акаунти, журнал, спиране на изпращанията |
+| `consent_tests.sql` | повторно съгласие с политиката |
+| `account_tests.sql` | смяна на имейл и изтриване на профил (026) |
+| `retention_tests.sql` | рег. номер в писмото, хеш на IP, обезличаване и снимки (029) |
 
-Картата: MapTiler (ако има ключ) → CARTO → OpenStreetMap. Ако един доставчик не отговаря, автоматично се пробва следващият.
+## Edge Functions
 
-## Правила в кода
+```
+npx supabase functions deploy submit-report
+npx supabase functions deploy send-emails --no-verify-jwt
+npx supabase functions deploy resend-webhook --no-verify-jwt
+npx supabase functions deploy maintenance --no-verify-jwt
+```
 
-- Текст от базата или от потребителя се слага с `textContent`, никога като HTML (SEC-5).
-- Без inline скриптове и `onerror` атрибути, за да може CSP да ги забрани (SEC-3).
-- Проверките в браузъра са само за удобство. Истинските правила са в базата (RLS и функциите) и в Edge Functions.
-- Снимките на сигналите никога не се показват публично, а мястото е приблизително.
-- Имейл и телефон на потребител не се показват никъде освен в Super Admin, след причина.
+`send-emails` и `maintenance` се викат от pg_cron с `CRON_SECRET`, а `resend-webhook` от Resend с подпис, затова са без
+проверка на потребителски токен. `send-emails` ползва филтъра от `submit-report/lib.ts`, затова се публикува с CLI,
+а не от редактора в Dashboard. Тайните (Resend, Turnstile, Geoapify, `CRON_SECRET`, `ALLOWED_ORIGINS`) са само в
+Supabase → Edge Functions → Secrets; `SUPABASE_URL` и `SUPABASE_SERVICE_ROLE_KEY` Supabase подава сам.
+pg_cron чете адреса на проекта и `cron_secret` от Vault.
+
+## Резервни копия (SEC-9)
+
+`tools/backup/backup.sh` прави с Supabase CLI три файла (роли, схема, данни) плюс историята на миграциите,
+пакетира ги и ги шифрова с парола (GPG, AES-256). Нешифрованите файлове не остават никъде.
+Снимките в Storage не са в архива.
+
+**Автоматично:** `.github/workflows/backup.yml` всяка неделя в 02:17 UTC. Архивът е в Actions → съответното
+изпълнение → Artifacts и се пази 90 дни. Нужни са две тайни в GitHub (Settings → Secrets and variables → Actions):
+
+- `SUPABASE_DB_URL` — Dashboard → Connect → **Session pooler** (порт 5432). Директната връзка е само по IPv6 и от GitHub не работи.
+- `BACKUP_PASSPHRASE` — поне 16 знака. Пази я и извън GitHub: без нея архивът не може да се отвори.
+
+**Преди миграция в production:** Actions → Backup → Run workflow с етикет, напр. `pre-030`. Миграцията се пуска чак
+след като изпълнението е зелено. Локално същото е `tools/backup/backup.sh pre-030` (трябват Supabase CLI и Docker).
+
+**Проверка и възстановяване:**
+
+```
+BACKUP_PASSPHRASE=… tools/backup/restore.sh callsliven-weekly-….tar.gz.gpg --check
+RESTORE_DB_URL=… BACKUP_PASSPHRASE=… tools/backup/restore.sh callsliven-weekly-….tar.gz.gpg
+```
+
+`--check` само разшифрова архива и сверява контролните суми. Истинското възстановяване е само в **нов, празен** проект
+и иска да се напише „ВЪЗСТАНОВИ“. След него ръчно остават снимките, Edge Functions с тайните им, Vault и настройките на Auth.
+
+## Лиценз
+
+Виж [`LICENSE`](LICENSE).

@@ -3,9 +3,12 @@
 Чист HTML, CSS и JavaScript, без фреймуърк и без пакетиране. Всяка страница работи с истински данни от Supabase
 (проектът `callsliven-dev`). В `web/` няма примерни или тестови данни.
 
-Сайтът се отваря през локален сървър (VS Code Live Server на `localhost:5500` с корен `/web`, виж `.vscode/settings.json`),
-не с двоен клик върху файла: картата, Turnstile и Supabase не приемат заявки от `file://` страници,
-а Turnstile приема само разрешени адреси (`localhost`).
+Сайтът се отваря през локален сървър на `localhost:5500`, не с двоен клик върху файла: картата, Turnstile и Supabase
+не приемат заявки от `file://` страници, а Turnstile приема само разрешени адреси.
+
+- **Firebase емулатор** (препоръчано, същите защитни заглавки като на живия сайт): `firebase emulators:start --only hosting`
+- **VS Code Live Server** с корен `/web` (виж `.vscode/settings.json`): по-бързо при работа, но без CSP, затова грешка
+  от блокирана заявка се вижда чак в емулатора или на живо.
 
 ## Страници
 
@@ -13,11 +16,11 @@
 |---|---|---|---|
 | `index.html` | Начална страница | всички | `search_public_reports` (4 най-нови), `categories` за чиповете |
 | `auth.html` | Вход, регистрация с код, забравена парола, втори фактор (`#login`, `#register`, `#forgot`) | всички | Supabase Auth |
-| `reports.html` | Всички сигнали: търсене, категория, период, сортиране + карта. Филтрите са в адреса, напр. `reports.html?cat=3&period=30` | всички | `search_public_reports`, `public_map_points` |
+| `reports.html` | Всички сигнали: търсене, категория, статус, населено място, период, сортиране + карта. Филтрите са в адреса, напр. `reports.html?cat=3&status=new,in_progress&place=Кермен&period=30` | всички | `search_public_reports`, `public_map_points`, `public_settlements` |
 | `report.html` | Един сигнал: `report.html?number=12` | всички | `get_public_report` |
 | `submit.html` | Подаване на сигнал на 4 стъпки | влязъл | `categories`, `subcategories`, `find_nearby_reports`, Storage `report-photos`, Edge Function `submit-report` |
 | `my-reports.html` | Моите сигнали, оттегляне | влязъл | `report_private`, `reports`, `report_events` (през RLS), `withdraw_report` |
-| `profile.html` | Име, фамилия, телефон | влязъл | `profiles` |
+| `profile.html` | Име, фамилия, телефон, смяна на имейл, изтриване на профила | влязъл | `profiles`, Supabase Auth, `delete_my_account` |
 | `mfa-setup.html` | Настройка на втори фактор (TOTP) | служители | Supabase Auth MFA |
 | `admin.html` | Админ панел: изискват внимание, списък, детайл, действия, изпращане към институции | служители с втори фактор | виж „Админ панел“ |
 | `super-admin.html` | Акаунти и роли, контакти с причина, изпращане, журнал (`#accounts`, `#sending`, `#log`) | Super Admin с втори фактор | виж „Super Admin“ |
@@ -27,6 +30,27 @@
 
 Страница, която изисква вход, сама праща посетителя към `auth.html?next=<страницата>#login` и го връща обратно след входа.
 Служител без втори фактор отива на `mfa-setup.html`, а служител с фактор, но без въведен код, — на `auth.html` за кода.
+
+## Филтри в публичния списък (`reports.html`)
+
+- **Статус:** може няколко наведнъж (`status=new,in_progress`). Легендата на картата също включва и изключва статуси.
+- **Населено място:** едно (`place=Кермен`). Списъкът идва от `public_settlements` (миграция 028): само места с поне един
+  публичен сигнал, Сливен е първо. Мястото се взема от публичния адрес, който геокодерът дава при подаване.
+- Отхвърлени и оттеглени сигнали не са публични и не се появяват, каквото и да има в адреса.
+- На телефон падащите менюта са по две на ред, а периодът е последен.
+
+## Профил (`profile.html`)
+
+**Смяна на имейл** (миграция 026). Supabase Auth с включено „Secure email change“ праща два 6-цифрени кода: до сегашния и до
+новия адрес. Всеки код се проверява с адреса, на който е изпратен (`verifyOtp`, тип `email_change`), и имейлът се сменя
+чак след двата. Повторно изпращане: след 60 секунди и до 3 на час (брояч `cs_email_code_sent` в localStorage).
+Незавършена смяна продължава при следващо отваряне на страницата. Шаблонът „Change email address“ в Supabase трябва да
+съдържа `{{ .Token }}`.
+
+**Изтриване на профила.** Парола и отметка за потвърждение, после `delete_my_account`. Функцията връща код:
+`deleted`, `wrong_password`, `too_many_attempts` (5 грешни пароли за час) или `staff_account` (служителите не се трият
+оттук; на тях страницата показва бележка вместо бутона). След изтриването сайтът чисти сесията (`sb-*-auth-token`)
+и своите ключове `cs_*` (езикът остава) и показва потвърждение. Сигналите остават публични без връзка с човека.
 
 ## Повторно съгласие с политиката
 
@@ -51,6 +75,8 @@
   зарежда новата версия, вместо да презапише чужда промяна.
 - **Изпращане към институцията** (миграция 013): „Изпрати“, „Изпрати отново“ с причина (до 5 опита),
   „Отбележи като препратено“ за институции без имейл. Докато писмото е в опашката, детайлът се обновява на 15 секунди.
+  При паркиране и обществен ред писмото до ОП „Градска мобилност“ и ОДМВР съдържа и регистрационния номер (миграция 029);
+  публичният текст остава пречистен.
 - Чете: `reports`, `report_admin`, `report_private`, `report_events`, `report_photos`, `report_dispatches`, `app_settings`,
   `institutions` (миграция 021).
 
@@ -74,6 +100,20 @@
 `update public.profiles set role = 'super_admin', first_name = '…', last_name = '…' where id = …`.
 Следващите служители се повишават от страницата „Акаунти“.
 
+## Хостинг и защитни заглавки (`firebase.json`)
+
+Сайтът се публикува във Firebase Hosting от тази папка (`firebase deploy --only hosting` от корена на хранилището).
+`firebase.json` дава на всяка страница CSP и другите защитни заглавки (SEC-3):
+
+- **Скриптове** само от сайта и от `challenges.cloudflare.com` (Turnstile). Вграден `<script>`, `onclick` и `eval` не работят.
+- **Стилове** допускат `'unsafe-inline'`, защото маркерите на картата взимат цвета си от `style="--c:…"`.
+- **Заявки** (`connect-src`) само към Supabase и Turnstile. **Картинки** (`img-src`) от сайта, Supabase, MapTiler, CARTO, OSM, `data:` и `blob:`.
+- HSTS, `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy` (местоположение само за сайта), COOP.
+- **Кеш:** HTML, `js/` и `css/` се проверяват при всяко отваряне; `vendor/` и `fonts/` се пазят година.
+
+Нова външна услуга (нов доставчик на карта, нов Supabase проект) трябва да се добави и в CSP, иначе браузърът я блокира.
+Грешката се вижда в конзолата като „Content Security Policy“.
+
 ## Файлове
 
 ```
@@ -84,10 +124,11 @@ css/
   auth.css        вход и регистрация (и основата на mfa-setup, privacy, terms)
   pages.css       общи елементи на страниците без основна навигация (mfa-setup, privacy, terms)
   legal.css       privacy и terms
-  profile.css     полета, карти, съобщения (profile, submit, my-reports, admin, super-admin)
+  profile.css     полета, карти, съобщения (profile, submit, my-reports, admin, super-admin);
+                  стиловете за имейла и изтриването са само под #email-card, #del-card и #deleted
   submit.css      формата за сигнал
   my-reports.css  моите сигнали
-  reports.css     списък и карта
+  reports.css     списък, филтри и карта
   report.css      един сигнал
   admin.css       админ панел (ползва се и от super-admin)
   super-admin.css само за super-admin: раздели, акаунти, изпращане, журнал
@@ -98,7 +139,7 @@ js/
   sb.js           единственият Supabase клиент за сайта (window.SB)
   common.js       общо: език BG/EN, навигация, менюто на профила, кой е влязъл, падащо меню, плочки на картата (window.CS)
   public-data.js  статуси, цветове и иконки за публичните страници (window.PUB)
-  otp.js          полето за 6-цифрен код (auth, mfa-setup)
+  otp.js          полето за 6-цифрен код (auth, mfa-setup, profile)
   legal.js        privacy и terms (бутон „нагоре“)
   home.js, auth.js, reports.js, report.js, submit.js, my-reports.js, profile.js, mfa-setup.js,
   admin.js, super-admin.js, help.js, letters.js — по един за страница
@@ -113,6 +154,20 @@ fonts/            Rubik (latin, cyrillic; 400–700)
 Елемент с клас `staff-only` в менюто на профила се вижда само за служители, а всеки елемент с клас `super-only`
 (в менюто и на страниците) — само за Super Admin. Това само скрива линкове; правата се проверяват в базата.
 
+### Ключове в браузъра
+
+| Ключ | Къде | За какво |
+|---|---|---|
+| `sb-…-auth-token` | localStorage | сесията на Supabase |
+| `language` | localStorage | избраният език |
+| `cs_code_sent` | localStorage | изпратени кодове при регистрация (до 3 на час) |
+| `cs_email_code_sent` | localStorage | изпратени кодове при смяна на имейл (до 3 на час) |
+| `cs_submit_draft` | localStorage | чернова на сигнала във формата |
+| `cs_my_seen_…` | localStorage | кои промени в „Моите сигнали“ са видени |
+| `cs_login_fails` | sessionStorage | неуспешни входове за проверката срещу ботове |
+
+Всички без `language` се трият при изтриване на профила. Последните три още липсват в таблицата в `privacy.html`.
+
 ## Настройки (`js/config.js`)
 
 Всичко в този файл е **публично по замисъл** — браузърът има нужда от него. Тайните ключове
@@ -120,8 +175,8 @@ fonts/            Rubik (latin, cyrillic; 400–700)
 
 | Ключ | Какво е |
 |---|---|
-| `SUPABASE_URL`, `SUPABASE_ANON_KEY` | Project Settings → API. Сега `callsliven-dev`; при пускане — production проектът |
-| `TURNSTILE_SITE_KEY` | Публичният ключ на Turnstile; тайният е в Supabase → Authentication → Attack Protection |
+| `SUPABASE_URL`, `SUPABASE_ANON_KEY` | Project Settings → API. Сега `callsliven-dev`; при пускане — production проектът. Новият адрес трябва и в `firebase.json` (`connect-src`, `img-src`) и в `ALLOWED_ORIGINS` на `submit-report` |
+| `TURNSTILE_SITE_KEY` | Публичният ключ на Turnstile; тайният е в Supabase → Authentication → Attack Protection. Домейнът на сайта (`call-sliven.web.app`, `call-sliven.firebaseapp.com`) трябва да е разрешен в Turnstile |
 | `MAPTILER_KEY`, `MAPTILER_STYLE` | Плочки на картата. Празен ключ = CARTO без ключ. Преди пускане ограничи ключа до домейна в MapTiler |
 | `POLICY_VERSION` | Версия на политиката, записва се при регистрация. Вдигни я, когато `privacy.html` се промени: влезлите потребители ще трябва да я приемат отново |
 
@@ -134,3 +189,5 @@ fonts/            Rubik (latin, cyrillic; 400–700)
 - Проверките в браузъра са само за удобство. Истинските правила са в базата (RLS и функциите) и в Edge Functions.
 - Снимките на сигналите никога не се показват публично, а мястото е приблизително.
 - Имейл и телефон на потребител не се показват никъде освен в Super Admin, след причина.
+- Стиловете на нова част от страница се пишат под нейния `id`, за да не се сблъскат с общи класове от други страници
+  (`profile.css` се зарежда и от `my-reports.html`, `submit.html` и админ страниците).

@@ -1,0 +1,54 @@
+# Шифрован експорт на базата (SEC-9).
+# Всяка неделя в 02:17 UTC и ръчно (Actions → Backup → Run workflow), напр. с етикет pre-030 преди миграция.
+# Тайни в Settings → Secrets and variables → Actions:
+#   SUPABASE_DB_URL     Session pooler връзка (порт 5432); директната е само по IPv6 и от GitHub не работи
+#   BACKUP_PASSPHRASE   поне 16 знака; пази я и извън GitHub, без нея архивът не се отваря
+# Архивът е шифрован и се пази като artifact 90 дни.
+name: Backup
+
+on:
+  schedule:
+    - cron: "17 2 * * 0"
+  workflow_dispatch:
+    inputs:
+      label:
+        description: "Етикет (напр. pre-030). Само малки латински букви, цифри и тире."
+        required: false
+        default: "manual"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Експорт и шифроване
+        id: dump
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+          BACKUP_DIR: ${{ runner.temp }}/backup
+          LABEL: ${{ github.event_name == 'schedule' && 'weekly' || inputs.label }}
+        shell: bash   # с pipefail: грешка в backup.sh не се губи зад tee
+        run: |
+          bash tools/backup/backup.sh "$LABEL" | tee "$RUNNER_TEMP/backup.log"
+          echo "archive=$(grep '^ARCHIVE=' "$RUNNER_TEMP/backup.log" | cut -d= -f2-)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ format('callsliven-db-{0}', github.run_number) }}
+          path: ${{ steps.dump.outputs.archive }}
+          retention-days: 90
+          if-no-files-found: error

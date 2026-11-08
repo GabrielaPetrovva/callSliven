@@ -265,7 +265,9 @@ IP адресът се пази само като хеш. Не може да с�
 - [ ] Публикуване във Firebase Hosting и проверка на всяка страница за блокирани заявки (конзола → „Content Security Policy“)
 - [ ] При смяна на Supabase проекта (production): новият адрес и в `js/config.js`, и в `firebase.json` (`img-src`, `connect-src`), и в `ALLOWED_ORIGINS` на `submit-report`
 - [ ] Ограничаване на ключа на MapTiler до домейна
-- [ ] Износ на данни (SEC-9)
+- [x] Шифрован експорт на базата (SEC-9): `tools/backup/`, седмично през GitHub Actions (`backup.yml`); виж README в корена
+- [ ] SEC-9: тайните `SUPABASE_DB_URL` и `BACKUP_PASSPHRASE` в GitHub, първо ръчно пускане и `restore.sh --check` на архива
+- [ ] SEC-9: проба на възстановяване в нов, празен проект (заедно с теста на Supabase Pro)
 - [ ] Нулиране на номерацията на сигналите в продукционната база
 - [ ] Бисквитки: провери какво реално се слага и опиши в политиката
 - [ ] Контактите в `letters.html`: провери ги отново на mun.sliven.bg точно преди пускане
