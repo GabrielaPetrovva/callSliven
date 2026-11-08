@@ -148,6 +148,10 @@ begin
   perform pg_temp.t16_expect('посетител', 'публичната карта работи', 'select * from public.public_map_points()', 'ok');
   perform pg_temp.t16_count('посетител', 'вижда публичния сигнал по номер', format('select count(*) from public.get_public_report(%s)', n1), 1);
   perform pg_temp.t16_count('посетител', 'търсенето намира тестовите сигнали', format($q$select count(*) from public.search_public_reports('Тестов сигнал', p_limit => 50) where out_number in (%s, %s, %s, %s)$q$, n1, n2, n3, n4), 4);
+  perform pg_temp.t16_expect('посетител', 'списъкът с населени места работи (028)', 'select * from public.public_settlements()', 'ok');
+  perform pg_temp.t16_expect('посетител', 'филтърът по статус и място работи (028)', $q$select * from public.search_public_reports(p_statuses => '{new,resolved}', p_settlement => 'Сливен')$q$, 'ok');
+  perform pg_temp.t16_count('посетител', 'филтър с непубличен статус не връща нищо (028)', $q$select count(*) from public.search_public_reports(p_statuses => '{rejected,withdrawn}')$q$, 0);
+  perform pg_temp.t16_expect('посетител', 'не вика settlement_from_address (028)', $q$select public.settlement_from_address('Сливен')$q$, 'deny');
   -- ===== Гражданин А =====
   perform pg_temp.t16_as('authenticated', ua);
   perform pg_temp.t16_count('гражданин А', 'вижда само своите report_private (чужди = 0)', format('select count(*) from public.report_private where user_id <> %L', ua), 0);
@@ -273,11 +277,12 @@ begin
     $q$select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
         where n.nspname = 'public' and p.prosecdef
           and not exists (select 1 from unnest(coalesce(p.proconfig, '{}')) c where c like 'search_path=%')$q$, 0);
-  perform pg_temp.t16_count('схема', 'посетителят вика само публичните функции (3 + normalize_email + rls_auto_enable на Supabase)',
+  perform pg_temp.t16_count('схема', 'посетителят вика само публичните функции (4 + normalize_email + rls_auto_enable на Supabase)',
     $q$select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
         where n.nspname = 'public' and p.prorettype <> 'trigger'::regtype
           and has_function_privilege('anon', p.oid, 'execute')
-          and p.proname not in ('search_public_reports', 'public_map_points', 'get_public_report', 'normalize_email', 'rls_auto_enable')$q$, 0);
+          and p.proname not in ('search_public_reports', 'public_map_points', 'get_public_report', 'public_settlements',
+                                'normalize_email', 'rls_auto_enable')$q$, 0);
   perform pg_temp.t16_count('схема', 'функциите само за service_role не са отворени за потребители',
     $q$select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
         where n.nspname = 'public'

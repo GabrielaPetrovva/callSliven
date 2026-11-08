@@ -1,7 +1,8 @@
 /* CallSliven — public reports: list + map (PUB-1…3). Only real data:
-   list  → search_public_reports (search, category, period, sort; 20 per page, up to 50)
-   map   → public_map_points (up to 500 newest points with the same filters)
-   Filters stay in the URL, e.g. reports.html?cat=3&period=30&sort=updated&q=дупка */
+   list   → search_public_reports (search, category, status, place, period, sort; 20 per page, up to 50)
+   map    → public_map_points (up to 500 newest points with the same filters)
+   places → public_settlements (places that have public reports, with counts; migration 028)
+   Filters stay in the URL, e.g. reports.html?cat=3&status=new,in_progress&place=Кермен&period=30&sort=updated&q=дупка */
 (() => {
   const { $, $$ } = CS;
   const PAGE = 20;
@@ -13,11 +14,14 @@
       countFiltered:n => `Намерени: <b>${n}</b>`,
       searchLabel:'Търсене на сигнали', searchPh:'Търси по улица или проблем',
       fCategory:'Категория', allCats:'Всички категории', fSort:'Подреждане', sortNew:'Най-нови', sortOld:'Най-стари', sortUpd:'Последно променени',
+      fStatus:'Статус', allStatuses:'Всички статуси', statusMany:n => `${n} статуса`,
+      fPlace:'Населено място', allPlaces:'Всички места',
+      legendTip:'Покажи само сигналите с този статус',
       p7:'7 дни', p30:'30 дни', pAll:'Всички', clear:'Изчисти филтрите', activeN:n => `${n} ${n === 1 ? 'активен филтър' : 'активни филтъра'}`,
       more:'Покажи още', moreN:n => `+ още ${n} ${n === 1 ? 'сигнал' : 'сигнала'} за същото`, open:'Отвори сигнала',
       approx:'Местата са показани приблизително.', showMap:'Карта', showList:'Списък',
       noneT:'Още няма публични сигнали', noneX:'Когато граждани подадат сигнали и те минат проверка, ще ги видиш тук и на картата.',
-      emptyT:'Няма сигнали по тези филтри', emptyX:'Опитай друга категория или период, или изчисти филтрите.',
+      emptyT:'Няма сигнали по тези филтри', emptyX:'Опитай друга категория, статус, място или период, или изчисти филтрите.',
       eLoad:'Сигналите не се заредиха. Провери интернета си и презареди страницата.', mapFail:'Картата не можа да се зареди.', docTitle:'Сигнали'
     },
     en: {
@@ -26,23 +30,28 @@
       countFiltered:n => `Found: <b>${n}</b>`,
       searchLabel:'Search reports', searchPh:'Search by street or problem',
       fCategory:'Category', allCats:'All categories', fSort:'Sort', sortNew:'Newest first', sortOld:'Oldest first', sortUpd:'Recently updated',
+      fStatus:'Status', allStatuses:'All statuses', statusMany:n => `${n} statuses`,
+      fPlace:'Town or village', allPlaces:'All places',
+      legendTip:'Show only reports with this status',
       p7:'7 days', p30:'30 days', pAll:'All', clear:'Clear filters', activeN:n => `${n} active ${n === 1 ? 'filter' : 'filters'}`,
       more:'Show more', moreN:n => `+ ${n} more ${n === 1 ? 'report' : 'reports'} about the same`, open:'Open report',
       approx:'Locations are shown approximately.', showMap:'Map', showList:'List',
       noneT:'No public reports yet', noneX:'When citizens submit reports and they pass review, you will see them here and on the map.',
-      emptyT:'No reports match these filters', emptyX:'Try another category or period, or clear the filters.',
+      emptyT:'No reports match these filters', emptyX:'Try another category, status, place or period, or clear the filters.',
       eLoad:"Reports didn't load. Check your internet and reload the page.", mapFail:"The map couldn't load.", docTitle:'Reports'
     }
   });
 
-  const state = { q:'', cat:'', period:'all', sort:'newest' };
-  let sb = null, cats = [], items = [], total = 0, offset = 0, seq = 0;
+  const state = { q:'', cat:'', st:[], place:'', period:'all', sort:'newest' };
+  let sb = null, cats = [], places = [], items = [], total = 0, offset = 0, seq = 0;
 
   /* ═════════ URL ⇄ state ═════════ */
   function readUrl() {
     const p = new URLSearchParams(location.search);
     state.q = (p.get('q') || '').slice(0, 100);
     state.cat = /^\d+$/.test(p.get('cat') || '') ? p.get('cat') : '';
+    state.st = [...new Set((p.get('status') || '').split(',').filter(s => PUB.STATUSES.includes(s)))];
+    state.place = (p.get('place') || '').trim().slice(0, 60);
     state.period = ['7', '30'].includes(p.get('period')) ? p.get('period') : 'all';
     state.sort = ['oldest', 'updated'].includes(p.get('sort')) ? p.get('sort') : 'newest';
   }
@@ -50,6 +59,8 @@
     const p = new URLSearchParams();
     if (state.q) p.set('q', state.q);
     if (state.cat) p.set('cat', state.cat);
+    if (state.st.length) p.set('status', state.st.join(','));
+    if (state.place) p.set('place', state.place);
     if (state.period !== 'all') p.set('period', state.period);
     if (state.sort !== 'newest') p.set('sort', state.sort);
     const qs = p.toString();
@@ -60,32 +71,64 @@
     const d = new Date(Date.now() - (+state.period) * 864e5);
     return d.toISOString().slice(0, 10);
   };
-  const filters = () => ({ p_query:state.q.trim() || null, p_category_id:state.cat ? +state.cat : null, p_from:fromDate(), p_to:null });
-  const activeCount = () => (state.q.trim() ? 1 : 0) + (state.cat ? 1 : 0) + (state.period !== 'all' ? 1 : 0);
+  const filters = () => ({
+    p_query:state.q.trim() || null, p_category_id:state.cat ? +state.cat : null, p_from:fromDate(), p_to:null,
+    p_statuses:state.st.length ? state.st : null, p_settlement:state.place || null
+  });
+  const activeCount = () => (state.q.trim() ? 1 : 0) + (state.cat ? 1 : 0) + (state.st.length ? 1 : 0)
+    + (state.place ? 1 : 0) + (state.period !== 'all' ? 1 : 0);
 
   /* ═════════ Controls ═════════ */
   const catIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>';
   const sortIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/></svg>';
+  const statusIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>';
+  const placeIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>';
   const ddCat = CS.dropdown($('#dd-cat'), { icon:catIcon, label:() => CS.t('fCategory'), value:'', isActive:v => !!v,
     onChange:v => { state.cat = v; reload(); } });
+  const ddStatus = CS.dropdown($('#dd-status'), { icon:statusIcon, label:() => CS.t('fStatus'), value:[], multi:true,
+    isActive:v => v.length > 0, many:n => CS.t('statusMany')(n),
+    onChange:v => { state.st = PUB.STATUSES.filter(s => v.includes(s)); reload(); } });
+  const ddPlace = CS.dropdown($('#dd-place'), { icon:placeIcon, label:() => CS.t('fPlace'), value:'', isActive:v => !!v,
+    onChange:v => { state.place = v; reload(); } });
   const ddSort = CS.dropdown($('#dd-sort'), { icon:sortIcon, label:() => CS.t('fSort'), value:'newest',
     onChange:v => { state.sort = v; reload(false); } });
 
   function renderControls() {
     ddCat.update([{ value:'', label:CS.t('allCats') },
       ...cats.map(c => ({ value:String(c.id), label:c.name, icon:`<span class="dd-ico">${PUB.icon(c.name)}</span>` }))], state.cat);
+    ddStatus.update([{ value:'', label:CS.t('allStatuses') },
+      ...PUB.STATUSES.map(s => ({ value:s, label:CS.t('s_' + s), icon:`<span class="dd-dot" style="--c:${PUB.COLORS[s]}"></span>` }))], [...state.st]);
+    ddPlace.update([{ value:'', label:CS.t('allPlaces') },
+      ...places.map(p => ({ value:p.name, label:p.name, meta:p.count }))], state.place);
+    $('#dd-place').hidden = !places.length && !state.place;
     ddSort.update([['newest', 'sortNew'], ['oldest', 'sortOld'], ['updated', 'sortUpd']].map(([v, k]) => ({ value:v, label:CS.t(k) })), state.sort);
     $$('#period button').forEach(b => b.classList.toggle('active', b.dataset.period === state.period));
     movePill();
     const n = activeCount();
     $('#active-bar').hidden = !n;
     $('#active-text').textContent = n ? CS.t('activeN')(n) : '';
-    $('#legend').innerHTML = '';
+    renderLegend();
+  }
+  // the map legend doubles as a quick status filter
+  function renderLegend() {
+    const legend = $('#legend');
+    legend.innerHTML = '';
     PUB.STATUSES.forEach(s => {
-      const sp = document.createElement('span'), i = document.createElement('i');
-      i.style.setProperty('--c', PUB.COLORS[s]); sp.append(i, CS.t('s_' + s)); $('#legend').append(sp);
+      const b = document.createElement('button'), i = document.createElement('i');
+      b.type = 'button'; b.dataset.status = s; b.title = CS.t('legendTip');
+      b.setAttribute('aria-pressed', state.st.includes(s));
+      b.classList.toggle('off', state.st.length > 0 && !state.st.includes(s));
+      i.style.setProperty('--c', PUB.COLORS[s]);
+      b.append(i, CS.t('s_' + s));
+      legend.append(b);
     });
   }
+  $('#legend').addEventListener('click', e => {
+    const b = e.target.closest('button[data-status]'); if (!b) return;
+    const s = b.dataset.status;
+    state.st = state.st.includes(s) ? state.st.filter(x => x !== s) : PUB.STATUSES.filter(x => x === s || state.st.includes(x));
+    reload();
+  });
   const seg = $('#period');
   const pill = Object.assign(document.createElement('span'), { className:'seg-pill' });
   seg.prepend(pill);
@@ -182,7 +225,7 @@
   $('#q').addEventListener('input', e => { clearTimeout(qTimer); qTimer = setTimeout(() => { state.q = e.target.value; reload(); }, 300); });
   $('#search-form').addEventListener('submit', e => { e.preventDefault(); clearTimeout(qTimer); state.q = $('#q').value; reload(); });
   $('#period').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { state.period = b.dataset.period; reload(); } });
-  const clearAll = () => { Object.assign(state, { q:'', cat:'', period:'all' }); $('#q').value = ''; reload(); };
+  const clearAll = () => { Object.assign(state, { q:'', cat:'', st:[], place:'', period:'all' }); $('#q').value = ''; reload(); };
   $('#clear').addEventListener('click', clearAll);
   $('#clear2').addEventListener('click', clearAll);
 
@@ -225,9 +268,15 @@
   placeMap();
   CS.client().then(async client => {
     sb = client;
-    const { data } = await sb.from('categories').select('id, name, sort_order').order('sort_order').order('name');
-    cats = data || [];
-    if (state.cat && !cats.some(c => String(c.id) === state.cat)) state.cat = '';
+    const [c, p] = await Promise.all([
+      sb.from('categories').select('id, name, sort_order').order('sort_order').order('name'),
+      sb.rpc('public_settlements')
+    ]);
+    cats = c.data || [];
+    if (p.error) console.warn('[CallSliven] public_settlements:', p.error);
+    places = (p.data || []).map(r => ({ name:r.out_settlement, count:Number(r.out_count) }));
+    if (state.cat && !cats.some(x => String(x.id) === state.cat)) state.cat = '';
+    if (state.place && !places.some(x => x.name === state.place)) state.place = '';
     reload(true);
   }).catch(e => {
     console.warn('[CallSliven] client:', e);

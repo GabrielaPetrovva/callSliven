@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- CallSliven — public reports (PUB-1…3): list + map, only real data from search_public_reports / public_map_points. -->
+<!-- CallSliven — public reports (PUB-1…3): list + map, only real data from search_public_reports / public_map_points.
+     Filters: search, category, status, town or village (public_settlements, migration 028), period, sort. -->
 <title>Сигнали · CallSliven</title>
 <link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="vendor/leaflet-1.9.4/leaflet.css">
@@ -67,6 +68,8 @@
           <input id="q" name="q" type="search" autocomplete="off" maxlength="100" data-i18n-ph="searchPh" placeholder="Търси по улица или проблем">
         </form>
         <div class="dd-slot" id="dd-cat"></div>
+        <div class="dd-slot" id="dd-status"></div>
+        <div class="dd-slot" id="dd-place"></div>
         <div class="segmented" role="group" aria-label="Период" id="period">
           <button type="button" data-period="7" data-i18n="p7">7 дни</button>
           <button type="button" data-period="30" data-i18n="p30">30 дни</button>
@@ -98,7 +101,7 @@
     <div class="map-col">
       <div class="map-wrap">
         <div id="map" role="region" aria-label="Карта на сигналите"></div>
-        <div class="map-legend" id="legend"></div>
+        <div class="map-legend" id="legend" role="group" aria-label="Статус"></div>
         <p class="map-note" data-i18n="approx">Местата са показани приблизително.</p>
       </div>
     </div>

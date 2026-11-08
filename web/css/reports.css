@@ -29,6 +29,7 @@
 .dd-slot{flex:0 1 auto;min-width:170px}
 .dd-slot.sort{min-width:160px}
 .dd-slot .dd-menu{z-index:60}
+.dd-slot[hidden]{display:none}
 .segmented{position:relative;display:flex;padding:4px;border-radius:999px;background:var(--g-50);border:1.5px solid var(--line)}
 .segmented button{position:relative;z-index:1;border:0;background:none;min-height:36px;padding:0 14px;border-radius:999px;font-size:14px;font-weight:600;color:var(--muted);transition:color .3s}
 .segmented button.active{color:#fff}
@@ -81,10 +82,17 @@
   isolation:isolate}
 #map{position:absolute;inset:0;font-family:var(--sans)}
 .map-fallback{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--muted)}
-.map-legend{position:absolute;z-index:500;left:12px;bottom:12px;display:flex;flex-wrap:wrap;gap:6px 12px;padding:8px 12px;border-radius:14px;background:rgba(255,255,255,.94);
+.map-legend{position:absolute;z-index:500;left:12px;bottom:12px;display:flex;flex-wrap:wrap;gap:4px 6px;padding:6px 8px;border-radius:14px;background:rgba(255,255,255,.94);
   box-shadow:0 8px 20px -12px rgba(0,0,0,.35);font-size:12.5px;font-weight:600}
-.map-legend span{display:inline-flex;align-items:center;gap:6px}
-.map-legend i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.map-legend i{width:10px;height:10px;border-radius:50%;background:var(--c);flex:none;transition:box-shadow .25s}
+/* each status in the legend is a quick filter */
+.map-legend button{display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:0 8px;border:0;border-radius:999px;background:none;
+  font:inherit;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;transition:background .25s, opacity .25s}
+.map-legend button:hover{background:var(--g-50)}
+.map-legend button[aria-pressed="true"]{background:var(--g-100)}
+.map-legend button[aria-pressed="true"] i{box-shadow:0 0 0 3px color-mix(in srgb, var(--c) 30%, transparent)}
+.map-legend button.off{opacity:.45}
+.map-legend button.off:hover{opacity:.8}
 .map-note{position:absolute;z-index:500;right:12px;top:12px;margin:0;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.94);font-size:12px;color:var(--muted);
   box-shadow:0 8px 20px -12px rgba(0,0,0,.35)}
 
@@ -128,12 +136,16 @@
   .view-toggle .i-list{display:none}
   .view-toggle[aria-pressed="true"] .i-list{display:block}
   .view-toggle[aria-pressed="true"] .i-map{display:none}
+  .map-legend{right:12px}
 }
 @media (max-width:600px){
   .page-head{padding-top:96px}
   .page-head .btn{width:100%}
-  .filter-top .dd-slot,.filter-top .segmented{flex:1 1 100%}
-  .dd-slot .dd-menu{width:100%;max-width:none}
+  /* two dropdowns per row, so four filters don't make the bar too tall */
+  .filter-top .dd-slot{flex:1 1 calc(50% - 5px);min-width:0}
+  .filter-top .segmented{flex:1 1 100%;order:1}   /* period last, so the four dropdowns pair up */
+  .dd-slot .dd-menu{width:100%;max-width:none;min-width:220px}
+  #dd-status .dd-menu,#dd-sort .dd-menu{left:auto;right:0}
   .segmented button{flex:1}
   .rcard{padding:14px}
 }
