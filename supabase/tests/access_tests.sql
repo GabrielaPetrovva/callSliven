@@ -289,7 +289,8 @@ begin
           and p.proname in ('create_report', 'dispatch_claim', 'dispatch_get_payload', 'dispatch_mark_result',
                             'dispatch_apply_webhook', 'report_add_photo', 'storage_tmp_stale', 'outbox_claim',
                             'outbox_get_payload', 'outbox_mark_result', 'log_security_event', 'log_system_event',
-                            'health_check', 'write_audit', 'purge_audit_log', 'run_scheduled_job')
+                            'health_check', 'write_audit', 'purge_audit_log', 'run_scheduled_job',
+                            'dispatch_get_photos', 'ip_recent_report_count', 'retention_photos_due', 'retention_photos_removed')
           and (has_function_privilege('anon', p.oid, 'execute') or has_function_privilege('authenticated', p.oid, 'execute'))$q$, 0);
 
   -- ===== Резултат и връщане назад =====

@@ -1,4 +1,5 @@
 // lib.ts — шаблони на писмата и малки помощни функции. Без мрежа и без база.
+import { buildLetterText } from "../submit-report/lib.ts";
 
 export function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -43,14 +44,29 @@ export interface DispatchPayload {
   out_role: string;
   out_attempt: number;
   out_created_at: string;
+  // Само когато институцията получава регистрационните номера за тази подкатегория (миграция 029)
+  out_original_title?: string | null;
+  out_original_description?: string | null;
 }
 
 export const PHOTO_LINK_DAYS = 7;
+export const PLATE_NOTE = "Регистрационният номер в текста е предоставен само за проверка по този сигнал.";
+
+// Текстът в писмото: публичният или, ако е разрешено, оригиналът без имейли, линкове и телефони, но с номерата.
+export function letterText(p: DispatchPayload): { title: string; description: string; withPlates: boolean } {
+  if (p.out_original_title && p.out_original_description) {
+    const t = buildLetterText(p.out_original_title, p.out_original_description);
+    const changed = t.title !== p.out_title || t.description !== p.out_description;
+    return { ...t, withPlates: changed };
+  }
+  return { title: p.out_title, description: p.out_description, withPlates: false };
+}
 
 export function dispatchMail(p: DispatchPayload, siteUrl?: string, photoUrls: string[] = [], photosUnavailable = false): Mail {
   const n = p.out_number;
+  const body = letterText(p);
   const prefix = (p.out_is_demo ? "[ДЕМО] " : "") + (p.out_attempt > 1 ? "Повторно: " : "");
-  const subject = `${prefix}Сигнал №${n} от гражданин: ${p.out_title}`.slice(0, 200);
+  const subject = `${prefix}Сигнал №${n} от гражданин: ${body.title}`.slice(0, 200);
   const osm = `https://www.openstreetmap.org/?mlat=${p.out_lat}&mlon=${p.out_lng}#map=18/${p.out_lat}/${p.out_lng}`;
   const link = siteUrl ? `${siteUrl.replace(/\/$/, "")}${REPORT_PATH}${n}` : null;
   const when = new Date(p.out_created_at).toLocaleString("bg-BG", { timeZone: "Europe/Sofia" });
@@ -66,9 +82,10 @@ export function dispatchMail(p: DispatchPayload, siteUrl?: string, photoUrls: st
     "",
     `Сигнал №${n}, подаден на ${when}`,
     `Категория: ${p.out_category} / ${p.out_subcategory}`,
-    `Заглавие: ${p.out_title}`,
+    `Заглавие: ${body.title}`,
     "",
-    p.out_description,
+    body.description,
+    ...(body.withPlates ? ["", PLATE_NOTE] : []),
     "",
     `Адрес: ${p.out_address ?? "не е определен автоматично"}`,
     `Координати: ${p.out_lat.toFixed(6)}, ${p.out_lng.toFixed(6)}`,
@@ -88,9 +105,10 @@ export function dispatchMail(p: DispatchPayload, siteUrl?: string, photoUrls: st
       : "") +
       `<p>До: <strong>${esc(p.out_institution)}</strong>${p.out_role === "cc" ? " <em>(копие за информация)</em>" : ""}</p>` +
       (p.out_attempt > 1 ? `<p><em>Повторно изпращане (опит ${p.out_attempt}).</em></p>` : "") +
-      `<h2 style="font-size:18px;margin:16px 0 4px">Сигнал №${n}: ${esc(p.out_title)}</h2>` +
+      `<h2 style="font-size:18px;margin:16px 0 4px">Сигнал №${n}: ${esc(body.title)}</h2>` +
       `<p style="color:#555;margin:0">Подаден на ${esc(when)} · ${esc(p.out_category)} / ${esc(p.out_subcategory)}</p>` +
-      `<p style="white-space:pre-wrap">${esc(p.out_description)}</p>` +
+      `<p style="white-space:pre-wrap">${esc(body.description)}</p>` +
+      (body.withPlates ? `<p style="color:#555;font-size:13px"><em>${esc(PLATE_NOTE)}</em></p>` : "") +
       `<p><strong>Адрес:</strong> ${esc(p.out_address ?? "не е определен автоматично")}<br>` +
       `<strong>Координати:</strong> ${p.out_lat.toFixed(6)}, ${p.out_lng.toFixed(6)}<br>` +
       `<a href="${esc(osm)}">Покажи на картата</a>` +

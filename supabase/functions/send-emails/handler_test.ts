@@ -1,6 +1,7 @@
 import nodeAssert from "node:assert/strict";
 import { handle } from "./handler.ts";
-import { dispatchMail, esc, outboxMail, safeEqual } from "./lib.ts";
+import { dispatchMail, esc, letterText, outboxMail, PLATE_NOTE, safeEqual } from "./lib.ts";
+import { sanitize } from "../submit-report/lib.ts";
 
 const assert = (v: unknown, msg?: string) => nodeAssert.ok(v, msg);
 const assertEquals = (a: unknown, b: unknown, msg?: string) => nodeAssert.deepStrictEqual(a, b, msg);
@@ -16,6 +17,15 @@ const dispatchRow = {
 const outboxRow = {
   out_kind: "report_rejected", out_to_email: "anna@example.invalid", out_first_name: "Анна <script>",
   out_report_number: 12, out_reject_reason: "insufficient_info", out_reject_note: "Липсва адрес", out_data: {}, out_created_at: "2026-10-16T17:00:00Z",
+};
+// Паркиране към институция, която получава номерата (dispatch_get_payload връща и оригинала)
+const plateRow = {
+  ...dispatchRow,
+  out_title: "Кола [рег. номер] на тротоара",
+  out_description: "Колата [рег. номер] стои там от сутринта. Звънете на [номер] или пишете на [имейл].",
+  out_subcategory: "Неправилно паркиране, синя зона", out_institution: "ОП „Градска мобилност“ (Община Сливен)",
+  out_original_title: "Кола СА 1234 АВ на тротоара",
+  out_original_description: "Колата СА 1234 АВ стои там от сутринта. Звънете на 0888 123 456 или пишете на ivan.petrov@abv.bg.",
 };
 
 function setup(opts: {
@@ -203,4 +213,48 @@ Deno.test("снимки: грешка при линковете не спира 
     assert(sent[0].text.includes("линковете към тях не можаха"));
     assert(rpcCalls.some((c) => c.name === "log_system_event" && c.args.p_level === "warning"));
   }
+});
+
+// ===== Регистрационен номер в писмото (миграция 029) =====
+
+Deno.test("рег. номер: остава в писмото, а телефонът и имейлът се махат", async () => {
+  const { deps, sent } = setup({ dispatchIds: [7], dispatchRow: plateRow });
+  await handle(post(SECRET), deps);
+  const m = sent[0];
+  assert(m.subject.includes("Кола СА 1234 АВ на тротоара"), m.subject);
+  assert(m.text.includes("Колата СА 1234 АВ стои там"));
+  assert(m.html.includes("Колата СА 1234 АВ стои там"));
+  for (const part of [m.subject, m.text, m.html]) {
+    assert(!part.includes("0888"), "телефонът не бива да излиза");
+    assert(!part.includes("ivan.petrov"), "имейлът не бива да излиза");
+  }
+  assert(m.text.includes("[номер]") && m.text.includes("[имейл]"));
+  assert(m.text.includes(PLATE_NOTE));
+  assert(m.html.includes(PLATE_NOTE));
+});
+
+Deno.test("рег. номер: без оригинал от базата писмото е с публичния текст и без бележка", async () => {
+  const row = { ...plateRow, out_original_title: null, out_original_description: null };
+  const { deps, sent } = setup({ dispatchIds: [7], dispatchRow: row });
+  await handle(post(SECRET), deps);
+  assert(sent[0].text.includes("Колата [рег. номер] стои там"));
+  assert(!sent[0].text.includes("1234"));
+  assert(!sent[0].text.includes(PLATE_NOTE));
+});
+
+Deno.test("рег. номер: оригинал без номер не добавя бележка", () => {
+  const row = {
+    ...dispatchRow,
+    out_title: "Дупка на улицата", out_description: "Голяма дупка, звънете на [номер]",
+    out_original_title: "Дупка на улицата", out_original_description: "Голяма дупка, звънете на 0888123456",
+  };
+  const t = letterText(row);
+  assertEquals(t, { title: "Дупка на улицата", description: "Голяма дупка, звънете на [номер]", withPlates: false });
+  assert(!dispatchMail(row).text.includes(PLATE_NOTE));
+});
+
+Deno.test("рег. номер: sanitize с keepPlates пази номерата, без него ги маха", () => {
+  const s = "Колата СА 1234 АВ и CH 5678 PK, тел. 0888 123 456";
+  assertEquals(sanitize(s), { text: "Колата [рег. номер] и [рег. номер], тел. [номер]", reasons: ["plate", "phone_or_id"] });
+  assertEquals(sanitize(s, { keepPlates: true }), { text: "Колата СА 1234 АВ и CH 5678 PK, тел. [номер]", reasons: ["phone_or_id"] });
 });

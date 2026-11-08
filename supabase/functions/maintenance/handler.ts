@@ -1,5 +1,5 @@
-// handler.ts — ежедневна поддръжка: изтрива остарели временни снимки и пази проекта „жив“.
-// Вика се от pg_cron през pg_net със споделена тайна, като send-emails.
+// handler.ts — ежедневна поддръжка: изтрива остарели временни снимки, снимките на обезличените сигнали
+// (миграция 029) и пази проекта „жив“. Вика се от pg_cron през pg_net със споделена тайна, като send-emails.
 
 // deno-lint-ignore no-explicit-any
 type Rpc = (name: string, args: Record<string, unknown>) => PromiseLike<{ data: any; error: { message: string } | null }>;
@@ -27,6 +27,48 @@ async function log(deps: Deps, level: "info" | "warning" | "error", message: str
   } catch { /* журналът не бива да чупи работата */ }
 }
 
+// Остарели временни снимки (не качени докрай или останали от неуспешни подавания)
+async function removeStaleTmp(deps: Deps): Promise<number> {
+  let removed = 0;
+  for (let round = 0; round < MAX_ROUNDS; round++) {
+    const { data, error } = await deps.rpc("storage_tmp_stale", { p_older_than: "24 hours" });
+    if (error) { await log(deps, "error", `storage_tmp_stale: ${error.message}`); break; }
+    const names = ((data ?? []) as { out_name: string }[]).map((r) => r.out_name).filter((n) => n.startsWith("tmp/"));
+    if (names.length === 0) break;
+    let failed = false;
+    for (let i = 0; i < names.length; i += CHUNK) {
+      const res = await deps.removeFiles(names.slice(i, i + CHUNK));
+      if (res.error) { await log(deps, "error", `изтриване на временни снимки: ${res.error.message}`); failed = true; break; }
+      removed += Math.min(CHUNK, names.length - i);
+    }
+    if (failed) break;
+  }
+  return removed;
+}
+
+// Снимки на обезличени сигнали: първо файлът в Storage, после записът в report_photos.
+// Ако Storage върне грешка, записът остава и файлът се опитва отново на следващия ден.
+async function removeRetentionPhotos(deps: Deps): Promise<number> {
+  let removed = 0;
+  for (let round = 0; round < MAX_ROUNDS; round++) {
+    const { data, error } = await deps.rpc("retention_photos_due", {});
+    if (error) { await log(deps, "error", `retention_photos_due: ${error.message}`); break; }
+    const paths = ((data ?? []) as { out_path: string }[]).map((r) => r.out_path).filter((p) => p.startsWith("reports/"));
+    if (paths.length === 0) break;
+    let failed = false;
+    for (let i = 0; i < paths.length; i += CHUNK) {
+      const part = paths.slice(i, i + CHUNK);
+      const res = await deps.removeFiles(part);
+      if (res.error) { await log(deps, "error", `изтриване на снимки на обезличени сигнали: ${res.error.message}`); failed = true; break; }
+      const done = await deps.rpc("retention_photos_removed", { p_paths: part });
+      if (done.error) { await log(deps, "error", `retention_photos_removed: ${done.error.message}`); failed = true; break; }
+      removed += Number(done.data ?? 0);
+    }
+    if (failed) break;
+  }
+  return removed;
+}
+
 export async function handle(req: Request, deps: Deps): Promise<Response> {
   const headers = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" };
   const out = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers });
@@ -43,22 +85,13 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
     return out(500, { code: "internal" });
   }
 
-  // 2) остарели временни снимки (не качени докрай или останали от неуспешни подавания)
-  let removed = 0;
-  for (let round = 0; round < MAX_ROUNDS; round++) {
-    const { data, error } = await deps.rpc("storage_tmp_stale", { p_older_than: "24 hours" });
-    if (error) { await log(deps, "error", `storage_tmp_stale: ${error.message}`); break; }
-    const names = ((data ?? []) as { out_name: string }[]).map((r) => r.out_name).filter((n) => n.startsWith("tmp/"));
-    if (names.length === 0) break;
-    let failed = false;
-    for (let i = 0; i < names.length; i += CHUNK) {
-      const res = await deps.removeFiles(names.slice(i, i + CHUNK));
-      if (res.error) { await log(deps, "error", `изтриване на временни снимки: ${res.error.message}`); failed = true; break; }
-      removed += Math.min(CHUNK, names.length - i);
-    }
-    if (failed) break;
-  }
+  // 2) остарели временни снимки
+  const removed = await removeStaleTmp(deps);
   if (removed > 0) await log(deps, "info", "Изтрити са остарели временни снимки", { files: removed });
 
-  return out(200, { ok: true, removed });
+  // 3) снимки на сигнали без профил, обезличени 1 година след приключването
+  const photos = await removeRetentionPhotos(deps);
+  if (photos > 0) await log(deps, "info", "Изтрити са снимки на обезличени сигнали", { files: photos });
+
+  return out(200, { ok: true, removed, photos });
 }

@@ -1,4 +1,5 @@
 // lib.ts — чиста логика без мрежа и база: проверка на входа и пречистване на текст.
+// sanitize и buildLetterText ползва и send-emails (писмата до институциите).
 
 export const LIMITS = {
   titleMin: 5,
@@ -124,14 +125,21 @@ export interface Sanitized {
   reasons: string[];
 }
 
-export function sanitize(input: string): Sanitized {
+export interface SanitizeOptions {
+  // true = регистрационните номера остават (само за писмото до институция, която ги получава; миграция 029)
+  keepPlates?: boolean;
+}
+
+export function sanitize(input: string, opts: SanitizeOptions = {}): Sanitized {
   const reasons = new Set<string>();
   let t = input;
 
   t = t.replace(EMAIL_RE, () => { reasons.add("email"); return "[имейл]"; });
   t = t.replace(URL_RE, () => { reasons.add("url"); return "[връзка]"; });
   t = t.replace(BARE_DOMAIN_RE, () => { reasons.add("url"); return "[връзка]"; });
-  t = t.replace(PLATE_RE, () => { reasons.add("plate"); return "[рег. номер]"; });
+  if (!opts.keepPlates) {
+    t = t.replace(PLATE_RE, () => { reasons.add("plate"); return "[рег. номер]"; });
+  }
   t = t.replace(NUMBER_RE, () => { reasons.add("phone_or_id"); return "[номер]"; });
 
   const letters = t.replace(/[^\p{L}]/gu, "");
@@ -151,6 +159,15 @@ export function buildPublicText(title: string, description: string) {
     title: t.text.slice(0, 100),
     description: d.text.slice(0, 2000),
     reasons: [...new Set([...t.reasons, ...d.reasons])],
+  };
+}
+
+// Текст за писмо до институция, която получава регистрационните номера: като публичния, но с номерата.
+// Имейли, линкове, телефони и ЕГН пак се махат.
+export function buildLetterText(title: string, description: string) {
+  return {
+    title: sanitize(title, { keepPlates: true }).text.slice(0, 100),
+    description: sanitize(description, { keepPlates: true }).text.slice(0, 2000),
   };
 }
 
