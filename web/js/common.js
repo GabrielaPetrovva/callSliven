@@ -1,8 +1,3 @@
-/* CallSliven — shared behaviour for every page with the main navigation:
-   language (EN/BG), navbar, mobile menu, scroll reveal, small helpers,
-   and the logged-in state in the navigation (user menu instead of "Log in").
-   Page scripts add their own strings with CS.addStrings({ en:{…}, bg:{…} })
-   and call CS.start() once at the end. */
 (() => {
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -20,7 +15,8 @@
       pLow:'Low', pMedium:'Medium', pHigh:'High', pCritical:'Critical',
       footAbout:'Report everyday problems in Sliven and follow how they get fixed.', footLinks:'Quick links', footLegal:'Legal', footContact:'Contact',
       privacy:'Privacy policy', terms:'Terms of use', cookies:'Cookies',
-      addr:'Sliven Municipality<br>1 Tsar Osvoboditel Sq., 8800 Sliven', call112:'Emergency? Call 112',
+      // the site is a diploma project, not the municipality's: no municipal address here (privacy.html §1, terms.html §1)
+      addr:'<a href="mailto:privacy@callsliven.app">privacy@callsliven.app</a><br>A diploma project. Not an official website of Sliven Municipality.', call112:'Emergency? Call 112',
       myReports:'My reports', profile:'Profile', adminPanel:'Admin panel', superAdmin:'Super Admin', logout:'Log out', accountMenu:'Account menu',
       today:'today', yesterday:'yesterday', daysAgo:n => `${n} days ago`,
       cTitle:'Updated privacy policy', cText:'The privacy policy has changed. To keep using your profile, read it and confirm.',
@@ -37,7 +33,7 @@
       pLow:'Нисък', pMedium:'Среден', pHigh:'Висок', pCritical:'Критичен',
       footAbout:'Подай сигнал за проблем в Сливен и проследи как се решава.', footLinks:'Бързи връзки', footLegal:'Правна информация', footContact:'Контакт',
       privacy:'Политика за поверителност', terms:'Условия за ползване', cookies:'Бисквитки',
-      addr:'Община Сливен<br>пл. „Цар Освободител“ 1, 8800 Сливен', call112:'Спешно? Звънни на 112',
+      addr:'<a href="mailto:privacy@callsliven.app">privacy@callsliven.app</a><br>Дипломен проект. Не е официален сайт на Община Сливен.', call112:'Спешно? Звънни на 112',
       myReports:'Моите сигнали', profile:'Профил', adminPanel:'Админ панел', superAdmin:'Super Admin', logout:'Изход', accountMenu:'Меню на профила',
       today:'днес', yesterday:'вчера', daysAgo:n => `преди ${n} дни`,
       cTitle:'Обновена политика за поверителност', cText:'Политиката за поверителност е променена. За да продължиш да ползваш профила си, прочети я и потвърди.',
