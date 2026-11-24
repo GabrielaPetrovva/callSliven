@@ -222,6 +222,11 @@ Deno.test("withSettlement и settlementOf", () => {
   const o = withSettlement({ city: "Сливен", suburb: "кв. Република", formatted: "x, 8800 Сливен" }, "Сотиря");
   assertEquals([settlementOf(o), o.suburb, o.formatted], ["Сотиря", undefined, "Сотиря, x, 8800 Сливен"]);
   assertEquals(withSettlement({ suburb: "Вилна зона", formatted: "TT1" }, "Градско").suburb, "Вилна зона");
+  // главни и малки букви: „Злати Войвода“ от Geoapify и „Злати войвода“ от списъка не се повтарят
+  assertEquals(withSettlement({ village: "Злати Войвода", formatted: "Ул. Иван Вазов 12, 8875 Злати Войвода, България" }, "Злати войвода").formatted,
+    "Ул. Иван Вазов 12, 8875 Злати Войвода, България");
+  // улица, която е само число, не влиза в публичния адрес
+  assertEquals(addressesFrom({ street: "488", village: "Сотиря", formatted: "Спирка Сотиря, 488, 8807 Сотиря, България" }, false).publicAddress, "Сотиря");
   // ако името вече е в адреса, не се повтаря
   assertEquals(withSettlement({ formatted: "TT3A, Тополчане, SL" }, "Тополчане").formatted, "TT3A, Тополчане, SL");
   assertEquals(addressesFrom(withSettlement({ street: "Ул. Тунджа", formatted: "Ул. Тунджа 5, 8853 SL, България" }, "Новачево"), false),

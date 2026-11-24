@@ -78,16 +78,17 @@
   function addressesFrom(r, hideExact) {
     if (!r) return { publicAddress: null, exactAddress: null };
     const settlement = r.city ?? r.town ?? r.village ?? r.hamlet ?? r.municipality;
-    const area = hideExact ? [r.suburb, settlement] : [r.street, settlement];
+    const street = r.street && !/^\d+$/.test(String(r.street).trim()) ? r.street : undefined;   // „488“ е номер на път, не улица
+    const area = hideExact ? [r.suburb, settlement] : [street, settlement];
     const pub = area.filter((x) => !!x).join(", ");
     return { publicAddress: pub ? pub.slice(0, 200) : null, exactAddress: r.formatted ? r.formatted.slice(0, 300) : null };
   }
 
-  // === Същото като public.settlement_from_address() в миграция 028 ===
+  // === Същото като public.settlement_from_address() в миграции 028 и 031 ===
   function settlementFromAddress(a) {
     if (a == null) return null;
     let s = a.replace(/^.*,/, "").trim();
-    s = s.replace(/^([Гг]р\.|[Гг]рад|[Сс]\.|[Сс]ело)\s*/, "").trim();
+    s = s.replace(/^([Гг]р\.|[Гг]рад\s|[Сс]\.|[Сс]ело\s)\s*/, "").trim();
     if (s === "" || s.length > 60 || /[0-9]/.test(s) ||
         /^([Уу]л|[Бб]ул|[Пп]л|[Кк]в|[Жж]\.?\s?[Кк]|[Мм]-ст|[Мм]естност|[Пп]ът)[\s.]/.test(s)) return null;
     return s;
@@ -159,7 +160,7 @@
   function withSettlement(r, name) {
     const base = r || {};
     const replaced = !!(base.city || base.town || base.village || base.hamlet || base.municipality);
-    const formatted = base.formatted ? (base.formatted.includes(name) ? base.formatted : name + ", " + base.formatted) : name;
+    const formatted = base.formatted ? (base.formatted.toLocaleLowerCase("bg").includes(name.toLocaleLowerCase("bg")) ? base.formatted : name + ", " + base.formatted) : name;
     return Object.assign({}, base, { city: undefined, town: undefined, hamlet: undefined, municipality: undefined,
       suburb: replaced ? undefined : base.suburb, village: name, formatted });
   }

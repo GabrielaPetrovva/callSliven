@@ -196,7 +196,7 @@ export function withSettlement(r: GeoResult | null, name: string): GeoResult {
   const base: GeoResult = r ?? {};
   const replaced = !!settlementOf(base);
   const formatted = base.formatted
-    ? (base.formatted.includes(name) ? base.formatted : `${name}, ${base.formatted}`)
+    ? (base.formatted.toLocaleLowerCase("bg").includes(name.toLocaleLowerCase("bg")) ? base.formatted : `${name}, ${base.formatted}`)
     : name;
   return {
     ...base,
@@ -210,10 +210,13 @@ export function withSettlement(r: GeoResult | null, name: string): GeoResult {
   };
 }
 
+// Улица, която е само число („488“ в Сотиря, „53“ в Бяла), е номер на път в OpenStreetMap, не име: не влиза в адреса.
+const streetName = (s?: string) => (s && !/^\d+$/.test(s.trim()) ? s : undefined);
+
 export function addressesFrom(r: GeoResult | null, hideExact: boolean) {
   if (!r) return { publicAddress: null, exactAddress: null };
   const settlement = settlementOf(r);
-  const area = hideExact ? [r.suburb, settlement] : [r.street, settlement];
+  const area = hideExact ? [r.suburb, settlement] : [streetName(r.street), settlement];
   const pub = area.filter((x): x is string => !!x).join(", ");
   return {
     publicAddress: pub ? pub.slice(0, 200) : null,
