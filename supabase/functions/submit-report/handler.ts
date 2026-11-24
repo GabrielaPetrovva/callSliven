@@ -6,7 +6,9 @@ import {
   type GeoResult,
   LIMITS,
   mapDbError,
+  settlementOf,
   validateInput,
+  withSettlement,
 } from "./lib.ts";
 
 // Минимумът от Supabase клиента, който ползваме.
@@ -105,6 +107,22 @@ async function reverseGeocode(deps: Deps, lat: number, lng: number): Promise<Geo
     const r = data?.results?.[0] ?? data?.features?.[0]?.properties;
     return r && typeof r === "object" ? (r as GeoResult) : null;
   } catch {
+    return null;
+  }
+}
+
+// Населеното място от списъка в базата (миграция 030), в което е точката: до 1,5 км от център на село,
+// до 2 км от Кермен, до 5 км от Сливен. Грешка тук не спира сигнала: адресите остават от геокодера.
+async function nearestSettlement(deps: Deps, lat: number, lng: number): Promise<string | null> {
+  try {
+    const { data, error } = await deps.admin.rpc("nearest_settlement", { p_lat: lat, p_lng: lng });
+    if (error) {
+      await logSystem(deps, "warning", `nearest_settlement: ${error.message}`);
+      return null;
+    }
+    return typeof data === "string" && data ? data : null;
+  } catch (e) {
+    await logSystem(deps, "warning", `nearest_settlement: ${e instanceof Error ? e.message : String(e)}`);
     return null;
   }
 }
@@ -240,10 +258,13 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
       photos = prepared;
     }
 
-    // 5) Адреси от координатите: сървърът решава, не потребителят
+    // 5) Адреси от координатите: сървърът решава, не потребителят.
+    //    Населеното място е от списъка в базата, ако точката е в някое от тях; иначе остава това на геокодера.
     const { data: sub } = await deps.admin.from("subcategories").select("hide_exact_address").eq("id", input.subcategoryId).maybeSingle();
     const hideExact = sub?.hide_exact_address ?? true;
-    const geo = await reverseGeocode(deps, input.lat, input.lng);
+    let geo = await reverseGeocode(deps, input.lat, input.lng);
+    const place = await nearestSettlement(deps, input.lat, input.lng);
+    if (place && place !== settlementOf(geo)) geo = withSettlement(geo, place);
     const { publicAddress, exactAddress } = addressesFrom(geo, hideExact);
 
     // 6) Пречистен текст и причини за преглед

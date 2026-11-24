@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CallSliven · тест на геокодера</title>
+<style>
+  body { font: 15px/1.5 system-ui, sans-serif; max-width: 1200px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+  h1 { font-size: 1.3rem; } h2 { font-size: 1.05rem; margin-top: 1.6rem; }
+  label { display: block; margin: .8rem 0 .2rem; font-weight: 600; }
+  input, textarea { width: 100%; box-sizing: border-box; padding: .5rem; font: inherit; border: 1px solid #888; border-radius: 6px; }
+  textarea { min-height: 14rem; font-family: ui-monospace, monospace; font-size: 14px; }
+  button { margin: 1rem .5rem 0 0; padding: .6rem 1.2rem; font: inherit; border-radius: 6px; border: 1px solid #333; background: #1F7A3A; color: #fff; cursor: pointer; }
+  button.sec { background: transparent; color: inherit; }
+  button:disabled { opacity: .5; cursor: default; }
+  .warn { background: #fff3cd; padding: .6rem .8rem; border-radius: 6px; }
+  .hint { color: #555; font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 14px; }
+  th, td { border: 1px solid #ccc; padding: .4rem .5rem; text-align: left; vertical-align: top; }
+  th { background: #f2f2f2; }
+  td.bad { background: #fde2e1; } td.ok { background: #e3f4e7; }
+  #status { margin-top: .8rem; font-weight: 600; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #151515; color: #eee; } input, textarea { background: #222; color: #eee; }
+    th { background: #262626; } th, td { border-color: #444; } .warn { background: #4a3f12; } .hint { color: #aaa; }
+    td.bad { background: #5a2523; } td.ok { background: #1f4a2b; }
+  }
+</style>
+</head>
+<body>
+<h1>CallSliven · тест на геокодера</h1>
+<p class="warn">Само за разработка. Не се качва в Hosting, не пипа базата и не създава сигнали.</p>
+<p>Страницата пита Geoapify по същия начин като <code>submit-report</code> (обратно геокодиране, <code>lang=bg</code>)
+и показва какво би се записало: точният адрес за институцията, публичният адрес и населеното място за филтъра
+(същото правило като <code>settlement_from_address</code> в миграция 028). Ако точката е в някое от 47-те места
+в списъка (до 1,5 км от център на село, 2 км от Кермен, 5 км от Сливен), името е оттам, както прави <code>submit-report</code> след миграция 030.</p>
+
+<h2>1. Ключ на Geoapify</h2>
+<label for="key">API ключ (myprojects.geoapify.com → твоя проект → API keys). Не се записва никъде.</label>
+<input id="key" type="password" autocomplete="off" spellcheck="false">
+
+<h2>2. Места</h2>
+<label for="places">По едно на ред: име на място (търси се в община Сливен) или координати <code>ширина, дължина</code></label>
+<textarea id="places">Сливен, бул. Цар Освободител
+42.76636, 26.12358
+42.57504, 26.22414
+42.58887, 26.32030
+42.65927, 26.50439
+42.75254, 26.15890
+42.50562, 26.25606
+42.58650, 26.19130
+42.69229, 26.40412
+42.73104, 26.18976
+42.65125, 26.42675</textarea>
+<p class="hint">Името първо се търси (прав геокодер, само в рамката на общината), а после точката му се пуска през обратния геокодер, както при истински сигнал.
+За най-точна проба кликни на мястото в OpenStreetMap, копирай координатите и ги сложи на отделен ред, напр. <code>42.5012, 26.2563</code>.</p>
+
+<button id="run">Провери</button><button id="copy" class="sec" disabled>Копирай резултатите</button>
+<div id="status"></div>
+
+<table id="tbl" hidden>
+  <thead><tr>
+    <th>#</th><th>Въведено</th><th>Координати</th><th>Точен адрес (за институцията)</th>
+    <th>Публичен адрес</th><th>Публичен адрес (скрито точно място)</th><th>Населено място за филтъра</th><th>Село от списъка (миграция 030)</th>
+  </tr></thead>
+  <tbody></tbody>
+</table>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  // рамката на картата от submit.js (малко по-широка от общината)
+  const AREA = { minLat: 42.30, minLng: 25.75, maxLat: 42.95, maxLng: 26.85 };
+  const SLIVEN = { lat: 42.6824, lng: 26.3229 };
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  let rows = [];
+
+  // === Същото като addressesFrom() в supabase/functions/submit-report/lib.ts ===
+  function addressesFrom(r, hideExact) {
+    if (!r) return { publicAddress: null, exactAddress: null };
+    const settlement = r.city ?? r.town ?? r.village ?? r.hamlet ?? r.municipality;
+    const area = hideExact ? [r.suburb, settlement] : [r.street, settlement];
+    const pub = area.filter((x) => !!x).join(", ");
+    return { publicAddress: pub ? pub.slice(0, 200) : null, exactAddress: r.formatted ? r.formatted.slice(0, 300) : null };
+  }
+
+  // === Същото като public.settlement_from_address() в миграция 028 ===
+  function settlementFromAddress(a) {
+    if (a == null) return null;
+    let s = a.replace(/^.*,/, "").trim();
+    s = s.replace(/^([Гг]р\.|[Гг]рад|[Сс]\.|[Сс]ело)\s*/, "").trim();
+    if (s === "" || s.length > 60 || /[0-9]/.test(s) ||
+        /^([Уу]л|[Бб]ул|[Пп]л|[Кк]в|[Жж]\.?\s?[Кк]|[Мм]-ст|[Мм]естност|[Пп]ът)[\s.]/.test(s)) return null;
+    return s;
+  }
+
+  // Същите 47 места като в миграция 030 (OpenStreetMap, ODbL)
+  const SETTLEMENTS = [
+    ['Сливен', 'city', 42.6817633, 26.3153528],
+    ['Драгоданово', 'village', 42.6318751, 26.5633750],
+    ['Панаретовци', 'village', 42.5640599, 26.3006000],
+    ['Ковачите', 'village', 42.5750389, 26.2241389],
+    ['Горно Александрово', 'village', 42.6551435, 26.6283912],
+    ['Старо село', 'village', 42.5816943, 26.1490238],
+    ['Чинтулово', 'village', 42.6484700, 26.2348200],
+    ['Новачево', 'village', 42.7525400, 26.1588999],
+    ['Биково', 'village', 42.4755927, 26.1898508],
+    ['Градско', 'village', 42.7663600, 26.1235799],
+    ['Въглен', 'village', 42.7518486, 26.2264941],
+    ['Раково', 'village', 42.7994100, 26.3041700],
+    ['Бяла', 'village', 42.7310400, 26.1897600],
+    ['Гергевец', 'village', 42.5904901, 26.3440299],
+    ['Самуилово', 'village', 42.5888700, 26.3202999],
+    ['Блатец', 'village', 42.6281497, 26.5371802],
+    ['Стара река', 'village', 42.8810800, 26.1840000],
+    ['Струпец', 'village', 42.6174499, 26.1135799],
+    ['Младово', 'village', 42.5288183, 26.2088114],
+    ['Злати войвода', 'village', 42.5865000, 26.1913000],
+    ['Мъсърлии', 'hamlet', 42.8879276, 26.1530553],
+    ['Изгрев', 'village', 42.8865300, 26.1085600],
+    ['Божевци', 'village', 42.8658709, 26.1332571],
+    ['Тополчане', 'village', 42.6512453, 26.4267498],
+    ['Средорек', 'village', 42.8727100, 26.1516500],
+    ['Желю войвода', 'village', 42.5950901, 26.4815399],
+    ['Зайчари', 'village', 42.9230000, 26.1947800],
+    ['Ръченица', 'hamlet', 42.9350200, 26.1786800],
+    ['Ичера', 'village', 42.7673100, 26.4514100],
+    ['Чокоба', 'village', 42.5175400, 26.3562699],
+    ['Бинкос', 'village', 42.6483223, 26.0975947],
+    ['Гавраилово', 'village', 42.6437226, 26.1795785],
+    ['Голямо Чочовени', 'village', 42.6704900, 26.1421199],
+    ['Крушаре', 'village', 42.5621707, 26.3772638],
+    ['Мечкарево', 'village', 42.5958199, 26.2795799],
+    ['Николаево', 'village', 42.5419366, 26.2696142],
+    ['Сотиря', 'village', 42.6922900, 26.4041200],
+    ['Глушник', 'village', 42.6592703, 26.5043934],
+    ['Калояново', 'village', 42.6596701, 26.4625299],
+    ['Бозаджии', 'village', 42.4787927, 26.3281808],
+    ['Трапоклово', 'village', 42.6476396, 26.5941310],
+    ['Глуфишево', 'village', 42.5443199, 26.3226200],
+    ['Малко Чочовени', 'village', 42.6515964, 26.2043595],
+    ['Селиминово', 'village', 42.6452499, 26.1533999],
+    ['Скобелево', 'village', 42.4888959, 26.3096229],
+    ['Камен', 'village', 42.6024700, 26.4172099],
+    ['Кермен', 'town', 42.5056243, 26.2560569]
+  ];
+  // Като nearest_settlement(): най-близкото място до 1,5 км от село, до 2 км от Кермен, до 5 км от Сливен
+  function nearestSettlement(lat, lng) {
+    const R = 6371000, rad = (d) => d * Math.PI / 180;
+    let best = null;
+    for (const [name, kind, slat, slng] of SETTLEMENTS) {
+      const dLat = rad(slat - lat), dLng = rad(slng - lng);
+      const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(lat)) * Math.cos(rad(slat)) * Math.sin(dLng / 2) ** 2;
+      const d = 2 * R * Math.asin(Math.sqrt(h));
+      if (d <= (kind === 'city' ? 5000 : kind === 'town' ? 2000 : 1500) && (!best || d < best.d)) best = { name, d };
+    }
+    return best;
+  }
+  // Като withSettlement() в lib.ts
+  function withSettlement(r, name) {
+    const base = r || {};
+    const replaced = !!(base.city || base.town || base.village || base.hamlet || base.municipality);
+    const formatted = base.formatted ? (base.formatted.includes(name) ? base.formatted : name + ", " + base.formatted) : name;
+    return Object.assign({}, base, { city: undefined, town: undefined, hamlet: undefined, municipality: undefined,
+      suburb: replaced ? undefined : base.suburb, village: name, formatted });
+  }
+
+  async function getJson(url) {
+    const res = await fetch(url);
+    if (res.status === 401 || res.status === 403) throw new Error("Geoapify отказва ключа (" + res.status + ")");
+    if (!res.ok) throw new Error("Geoapify върна " + res.status);
+    return res.json();
+  }
+
+  async function search(text, key) {
+    const u = "https://api.geoapify.com/v1/geocode/search?text=" + encodeURIComponent(text + ", България") +
+      "&lang=bg&format=json&limit=1" +
+      "&filter=rect:" + [AREA.minLng, AREA.minLat, AREA.maxLng, AREA.maxLat].join(",") +
+      "&bias=proximity:" + SLIVEN.lng + "," + SLIVEN.lat +
+      "&apiKey=" + encodeURIComponent(key);
+    const d = await getJson(u);
+    const r = d && d.results && d.results[0];
+    return r ? { lat: r.lat, lng: r.lon } : null;
+  }
+
+  async function reverse(lat, lng, key, type) {
+    const u = "https://api.geoapify.com/v1/geocode/reverse?lat=" + lat + "&lon=" + lng +
+      (type ? "&type=" + type : "") +
+      "&lang=bg&format=json&apiKey=" + encodeURIComponent(key);
+    const d = await getJson(u);
+    return (d && d.results && d.results[0]) || null;
+  }
+
+  function cell(tr, text, cls) {
+    const td = document.createElement("td");
+    td.textContent = text == null || text === "" ? "—" : text;
+    if (cls) td.className = cls;
+    tr.appendChild(td);
+  }
+
+  $("run").addEventListener("click", async () => {
+    const key = $("key").value.trim();
+    if (!key) { $("status").textContent = "Въведи ключа на Geoapify."; $("key").focus(); return; }
+    const lines = $("places").value.split("\n").map((s) => s.trim()).filter(Boolean).slice(0, 40);
+    if (!lines.length) { $("status").textContent = "Няма въведени места."; return; }
+
+    $("run").disabled = true; $("copy").disabled = true;
+    const tbody = $("tbl").querySelector("tbody");
+    tbody.innerHTML = ""; $("tbl").hidden = false; rows = [];
+    let noPlace = 0;
+
+    for (let i = 0; i < lines.length; i++) {
+      const input = lines[i];
+      $("status").textContent = "Проверявам " + (i + 1) + " от " + lines.length + "…";
+      const row = { n: i + 1, input, coords: null, exact: null, pub: null, pubHidden: null, settlement: null, fallback: null, error: null };
+      try {
+        const m = input.match(/^(-?\d+(?:\.\d+)?)\s*[,; ]\s*(-?\d+(?:\.\d+)?)$/);
+        let p = m ? { lat: Number(m[1]), lng: Number(m[2]) } : await search(input, key);
+        if (!p) throw new Error("мястото не е намерено в общината");
+        row.coords = p.lat.toFixed(5) + ", " + p.lng.toFixed(5);
+        if (!m) await sleep(250);
+        const r = await reverse(p.lat, p.lng, key);
+        const a = addressesFrom(r, false), h = addressesFrom(r, true);
+        row.exact = a.exactAddress; row.pub = a.publicAddress; row.pubHidden = h.publicAddress;
+        row.settlement = settlementFromAddress(a.publicAddress);
+        // Като submit-report след миграция 030: ако точката е в място от списъка, името е оттам
+        const geoPlace = r && (r.city || r.town || r.village || r.hamlet || r.municipality);
+        const near = nearestSettlement(p.lat, p.lng);
+        {
+          if (near && near.name !== geoPlace) {
+            const g = withSettlement(r, near.name);
+            const a2 = addressesFrom(g, false), h2 = addressesFrom(g, true);
+            row.exact = a2.exactAddress; row.pub = a2.publicAddress; row.pubHidden = h2.publicAddress;
+            row.settlement = settlementFromAddress(a2.publicAddress);
+            row.fallback = near.name + " (" + Math.round(near.d) + " м)";
+          } else row.fallback = near ? near.name + " (" + Math.round(near.d) + " м, същото)" : "не е в село от списъка";
+        }
+      } catch (e) {
+        row.error = e.message;
+        if (/отказва ключа/.test(e.message)) { rows.push(row); break; }
+      }
+      if (!row.settlement) noPlace++;
+      rows.push(row);
+
+      const tr = document.createElement("tr");
+      cell(tr, String(row.n)); cell(tr, row.input); cell(tr, row.coords);
+      if (row.error) { const td = document.createElement("td"); td.colSpan = 5; td.className = "bad"; td.textContent = "Грешка: " + row.error; tr.appendChild(td); }
+      else { cell(tr, row.exact); cell(tr, row.pub); cell(tr, row.pubHidden); cell(tr, row.settlement, row.settlement ? "ok" : "bad"); cell(tr, row.fallback || ""); }
+      tbody.appendChild(tr);
+      await sleep(250);   // безплатният план на Geoapify позволява до 5 заявки в секунда
+    }
+
+    const last = rows[rows.length - 1];
+    $("status").textContent = last && last.error && /отказва ключа/.test(last.error)
+      ? "Спрях: " + last.error + ". Провери ключа и дали в Geoapify няма ограничение по адрес."
+      : "Готово: " + rows.length + " места, " + noPlace + " без населено място (червените).";
+    $("run").disabled = false; $("copy").disabled = !rows.length;
+  });
+
+  // таблица с табулации: поставя се направо в чата или в Excel
+  $("copy").addEventListener("click", async () => {
+    const head = ["#", "Въведено", "Координати", "Точен адрес", "Публичен адрес", "Публичен (скрито)", "Населено място", "Село от списъка"];
+    const body = rows.map((r) => [r.n, r.input, r.coords, r.error ? "ГРЕШКА: " + r.error : r.exact, r.pub, r.pubHidden, r.settlement, r.fallback]
+      .map((v) => (v == null ? "—" : String(v))).join("\t"));
+    const text = [head.join("\t"), ...body].join("\n");
+    try { await navigator.clipboard.writeText(text); $("status").textContent = "Копирано. Постави го в чата."; }
+    catch { $("status").textContent = "Не можах да копирам автоматично. Маркирай таблицата и натисни Ctrl+C."; }
+  });
+</script>
+</body>
+</html>

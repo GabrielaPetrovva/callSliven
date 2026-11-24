@@ -3,16 +3,30 @@ import nodeAssert from "node:assert/strict";
 const assert = (v: unknown, msg?: string) => nodeAssert.ok(v, msg);
 const assertEquals = (a: unknown, b: unknown, msg?: string) => nodeAssert.deepStrictEqual(a, b, msg);
 import { handle } from "./handler.ts";
-import { addressesFrom, sanitize, validateInput } from "./lib.ts";
+import { addressesFrom, sanitize, settlementOf, validateInput, withSettlement } from "./lib.ts";
 
 const USER = "a1000000-0000-4000-8000-000000000001";
 const KEY = "10000000-0000-4000-8000-000000000001";
 
 interface Calls { rpc: { name: string; args: Record<string, unknown> }[]; fetchUrls: string[]; uploads: string[]; removed: string[] }
 
+// Отговори на Geoapify. "noplace", "road" и "municipality" са истинските случаи от теста на селата (24.11.2026):
+// Ковачите (улица без село), Градско (само код на път) и разклона за Сотиря („Сливен“ извън града).
+const GEO = {
+  ok: { formatted: "ул. Хаджи Димитър 12, Сливен", street: "ул. Хаджи Димитър", housenumber: "12", suburb: "Клуцохор", city: "Сливен" },
+  noplace: { formatted: "Ул. Васил Костов 18, 8874 SL, България", street: "Ул. Васил Костов", housenumber: "18" },
+  road: { formatted: "TT1, SL, България", name: "TT1" },
+  municipality: {
+    formatted: "разклона за Сотиря, Ичеренско шосе, Вилна Зона Лозята, 8800 Сливен, България",
+    street: "Ичеренско шосе", suburb: "Вилна Зона Лозята", city: "Сливен",
+  },
+};
+
 function setup(opts: {
   turnstile?: "ok" | "failed" | "down";
-  geo?: "ok" | "down";
+  geo?: "ok" | "noplace" | "road" | "municipality" | "down";
+  nearest?: string | null;
+  nearestError?: boolean;
   rpcError?: string;
   hide?: boolean;
   env?: Record<string, string | undefined>;
@@ -38,9 +52,7 @@ function setup(opts: {
         return Promise.resolve(new Response(JSON.stringify({ success: opts.turnstile !== "failed" })));
       }
       if (opts.geo === "down") return Promise.reject(new Error("net"));
-      return Promise.resolve(new Response(JSON.stringify({
-        results: [{ formatted: "ул. Хаджи Димитър 12, Сливен", street: "ул. Хаджи Димитър", housenumber: "12", suburb: "Клуцохор", city: "Сливен" }],
-      })));
+      return Promise.resolve(new Response(JSON.stringify({ results: [GEO[opts.geo ?? "ok"]] })));
     }) as typeof fetch,
     admin: {
       auth: { getUser: () => Promise.resolve({ data: { user: user ? { id: user } : null }, error: user ? null : "bad" }) },
@@ -53,6 +65,10 @@ function setup(opts: {
         if (name === "ip_recent_report_count") {
           if (opts.ipError) return Promise.resolve({ data: null, error: { message: "boom" } });
           return Promise.resolve({ data: opts.ipCount ?? 0, error: null });
+        }
+        if (name === "nearest_settlement") {
+          if (opts.nearestError) return Promise.resolve({ data: null, error: { message: "boom" } });
+          return Promise.resolve({ data: opts.nearest ?? null, error: null });
         }
         return Promise.resolve({ data: null, error: null });
       },
@@ -100,12 +116,14 @@ const good = {
   lat: 42.6824, lng: 26.3229, idempotency_key: KEY, turnstile_token: "t",
 };
 
+const created = (calls: Calls) => calls.rpc.find((c) => c.name === "create_report")!.args;
+
 Deno.test("успешно подаване: пречистен текст, адреси от сървъра, идентичност от токена", async () => {
   const { deps, calls } = setup();
   const res = await handle(req({ ...good, user_id: "evil", p_user_id: "evil" }), deps);
   assertEquals(res.status, 201);
   assertEquals(await res.json(), { number: 42, status: "new", needs_review: false, photos_saved: 0, photos_failed: 0 });
-  const a = calls.rpc.find((c) => c.name === "create_report")!.args;
+  const a = created(calls);
   assertEquals(a.p_user_id, USER);
   assertEquals(a.p_public_address, "ул. Хаджи Димитър, Сливен");
   assertEquals(a.p_exact_address, "ул. Хаджи Димитър 12, Сливен");
@@ -116,16 +134,98 @@ Deno.test("успешно подаване: пречистен текст, ад�
 Deno.test("скрит адрес: публично само квартал и град", async () => {
   const { deps, calls } = setup({ hide: true });
   await handle(req(good), deps);
-  assertEquals(calls.rpc.find((c) => c.name === "create_report")!.args.p_public_address, "Клуцохор, Сливен");
+  assertEquals(created(calls).p_public_address, "Клуцохор, Сливен");
 });
 
-Deno.test("геокодерът не работи: сигналът минава без адреси", async () => {
+Deno.test("геокодерът не работи и няма село наблизо: сигналът минава без адреси", async () => {
   const { deps, calls } = setup({ geo: "down" });
   const res = await handle(req(good), deps);
   assertEquals(res.status, 201);
-  const a = calls.rpc.find((c) => c.name === "create_report")!.args;
+  const a = created(calls);
   assertEquals(a.p_public_address, null);
   assertEquals(a.p_exact_address, null);
+});
+
+// --- населено място от списъка в базата (миграция 030) ---
+
+Deno.test("населено място: същото като на геокодера или нищо - адресите не се пипат", async () => {
+  for (const nearest of ["Сливен", null]) {
+    const { deps, calls } = setup({ nearest, hide: false });
+    await handle(req(good), deps);
+    assert(calls.rpc.some((c) => c.name === "nearest_settlement"));
+    assertEquals(created(calls).p_public_address, "ул. Хаджи Димитър, Сливен", String(nearest));
+    assertEquals(created(calls).p_exact_address, "ул. Хаджи Димитър 12, Сливен");
+  }
+  const { deps, calls } = setup({ nearest: "Сливен", hide: true });
+  await handle(req(good), deps);
+  assertEquals(created(calls).p_public_address, "Клуцохор, Сливен");
+});
+
+Deno.test("населено място: геокодерът казва „Сливен“ извън града (Сотиря) - важи селото, кварталът отпада", async () => {
+  const { deps, calls } = setup({ geo: "municipality", nearest: "Сотиря" });
+  await handle(req(good), deps);
+  assertEquals(created(calls).p_public_address, "Ичеренско шосе, Сотиря");
+  assertEquals(created(calls).p_exact_address, "разклона за Сотиря, Ичеренско шосе, Вилна Зона Лозята, 8800 Сливен, България");
+  const { deps: d2, calls: c2 } = setup({ geo: "municipality", nearest: "Сотиря", hide: true });
+  await handle(req(good), d2);
+  assertEquals(created(c2).p_public_address, "Сотиря");
+});
+
+Deno.test("населено място: улица без село (Ковачите) взима селото от списъка", async () => {
+  const { deps, calls } = setup({ geo: "noplace", nearest: "Ковачите" });
+  const res = await handle(req({ ...good, lat: 42.57504, lng: 26.22414 }), deps);
+  assertEquals(res.status, 201);
+  const n = calls.rpc.find((c) => c.name === "nearest_settlement")!;
+  assertEquals(n.args, { p_lat: 42.57504, p_lng: 26.22414 });
+  const a = created(calls);
+  assertEquals(a.p_public_address, "Ул. Васил Костов, Ковачите");
+  assertEquals(a.p_exact_address, "Ковачите, Ул. Васил Костов 18, 8874 SL, България");
+});
+
+Deno.test("населено място: само код на път (Градско), нормален и скрит адрес", async () => {
+  const { deps, calls } = setup({ geo: "road", nearest: "Градско" });
+  await handle(req(good), deps);
+  assertEquals(created(calls).p_public_address, "Градско");
+  assertEquals(created(calls).p_exact_address, "Градско, TT1, SL, България");
+  const { deps: d2, calls: c2 } = setup({ geo: "road", nearest: "Градско", hide: true });
+  await handle(req(good), d2);
+  assertEquals(created(c2).p_public_address, "Градско");
+});
+
+Deno.test("населено място: геокодерът не работи, но селото е известно", async () => {
+  const { deps, calls } = setup({ geo: "down", nearest: "Самуилово" });
+  await handle(req(good), deps);
+  assertEquals(created(calls).p_public_address, "Самуилово");
+  assertEquals(created(calls).p_exact_address, "Самуилово");
+});
+
+Deno.test("населено място: точката не е в село (нива) - адресите остават от геокодера", async () => {
+  const { deps, calls } = setup({ geo: "noplace", nearest: null });
+  await handle(req(good), deps);
+  assertEquals(created(calls).p_public_address, "Ул. Васил Костов");
+  assertEquals(created(calls).p_exact_address, "Ул. Васил Костов 18, 8874 SL, България");
+});
+
+Deno.test("населено място: грешка в базата не спира сигнала и се записва като предупреждение", async () => {
+  const { deps, calls } = setup({ geo: "road", nearestError: true });
+  const res = await handle(req(good), deps);
+  assertEquals(res.status, 201);
+  assertEquals(created(calls).p_public_address, null);
+  assert(calls.rpc.some((c) => c.name === "log_system_event" && c.args.p_level === "warning"));
+});
+
+Deno.test("withSettlement и settlementOf", () => {
+  assertEquals(settlementOf(null), undefined);
+  assertEquals(settlementOf({ village: "Кермен" }), "Кермен");
+  const g = withSettlement(null, "Градско");
+  assertEquals([settlementOf(g), g.formatted], ["Градско", "Градско"]);
+  const o = withSettlement({ city: "Сливен", suburb: "кв. Република", formatted: "x, 8800 Сливен" }, "Сотиря");
+  assertEquals([settlementOf(o), o.suburb, o.formatted], ["Сотиря", undefined, "Сотиря, x, 8800 Сливен"]);
+  assertEquals(withSettlement({ suburb: "Вилна зона", formatted: "TT1" }, "Градско").suburb, "Вилна зона");
+  // ако името вече е в адреса, не се повтаря
+  assertEquals(withSettlement({ formatted: "TT3A, Тополчане, SL" }, "Тополчане").formatted, "TT3A, Тополчане, SL");
+  assertEquals(addressesFrom(withSettlement({ street: "Ул. Тунджа", formatted: "Ул. Тунджа 5, 8853 SL, България" }, "Новачево"), false),
+    { publicAddress: "Ул. Тунджа, Новачево", exactAddress: "Новачево, Ул. Тунджа 5, 8853 SL, България" });
 });
 
 Deno.test("без токен или с невалиден токен: 401", async () => {
@@ -239,7 +339,7 @@ Deno.test("подозрителен текст -> needs_review и оригина
   const { deps, calls } = setup();
   const res = await handle(req({ ...good, description: "Дупка. Звънете на 0888123456 за подробности." }), deps);
   assertEquals((await res.json()).needs_review, true);
-  const a = calls.rpc.find((c) => c.name === "create_report")!.args;
+  const a = created(calls);
   assertEquals(a.p_description, "Дупка. Звънете на [номер] за подробности.");
   assertEquals(a.p_original_description, "Дупка. Звънете на 0888123456 за подробности.");
   assertEquals(a.p_suspicious_reasons, ["phone_or_id"]);
@@ -275,7 +375,7 @@ Deno.test("снимки: проверяват се, слагат се на по�
   assertEquals(res.status, 201);
   const body = await res.json();
   assertEquals([body.photos_saved, body.photos_failed], [2, 0]);
-  assertEquals(calls.rpc.find((c) => c.name === "create_report")!.args.p_photo_count, 2);
+  assertEquals(created(calls).p_photo_count, 2);
   assertEquals(calls.uploads, ["reports/r-1/1.jpg", "reports/r-1/2.jpg"]);
   assertEquals(calls.rpc.filter((c) => c.name === "report_add_photo").length, 2);
   assertEquals(calls.removed, [P1, P2]);
@@ -337,12 +437,12 @@ Deno.test("лимит по IP: под прага нищо, над първия �
   const a = await run(5);
   assertEquals(a.res.status, 201);
   assertEquals((await a.res.json()).needs_review, false);
-  assertEquals(a.calls.rpc.find((c) => c.name === "create_report")!.args.p_suspicious_reasons, []);
+  assertEquals(created(a.calls).p_suspicious_reasons, []);
 
   const b = await run(6);
   assertEquals(b.res.status, 201);
   assertEquals((await b.res.json()).needs_review, true);
-  assertEquals(b.calls.rpc.find((c) => c.name === "create_report")!.args.p_suspicious_reasons, ["ip_burst"]);
+  assertEquals(created(b.calls).p_suspicious_reasons, ["ip_burst"]);
 
   const c = await run(15);
   assertEquals(c.res.status, 429);

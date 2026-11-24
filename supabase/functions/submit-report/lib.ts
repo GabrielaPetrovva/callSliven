@@ -183,9 +183,36 @@ export interface GeoResult {
   municipality?: string;
 }
 
+// Населеното място от отговора на геокодера, ако го има.
+export function settlementOf(r: GeoResult | null): string | undefined {
+  return r ? (r.city ?? r.town ?? r.village ?? r.hamlet ?? r.municipality) : undefined;
+}
+
+// Населеното място от списъка в базата (nearest_settlement, миграция 030) е по-точно от това на геокодера:
+// в част от селата Geoapify връща само най-близкия път („TT1, SL, България“), а за точки извън града понякога
+// дава „Сливен“, защото връща общината. Името се слага като село, а точният адрес за институцията го получава
+// отпред, ако още го няма. Ако геокодерът е дал друго място, кварталът му (напр. „кв. Република“) не важи.
+export function withSettlement(r: GeoResult | null, name: string): GeoResult {
+  const base: GeoResult = r ?? {};
+  const replaced = !!settlementOf(base);
+  const formatted = base.formatted
+    ? (base.formatted.includes(name) ? base.formatted : `${name}, ${base.formatted}`)
+    : name;
+  return {
+    ...base,
+    city: undefined,
+    town: undefined,
+    hamlet: undefined,
+    municipality: undefined,
+    suburb: replaced ? undefined : base.suburb,
+    village: name,
+    formatted,
+  };
+}
+
 export function addressesFrom(r: GeoResult | null, hideExact: boolean) {
   if (!r) return { publicAddress: null, exactAddress: null };
-  const settlement = r.city ?? r.town ?? r.village ?? r.hamlet ?? r.municipality;
+  const settlement = settlementOf(r);
   const area = hideExact ? [r.suburb, settlement] : [r.street, settlement];
   const pub = area.filter((x): x is string => !!x).join(", ");
   return {
