@@ -1,0 +1,18 @@
+[debug] [2026-11-25T19:09:30.659Z] ----------------------------------------------------------------------
+[debug] [2026-11-25T19:09:30.677Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Габриела\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting
+[debug] [2026-11-25T19:09:30.677Z] CLI Version:   15.35.0
+[debug] [2026-11-25T19:09:30.677Z] Platform:      win32
+[debug] [2026-11-25T19:09:30.678Z] Node Version:  v26.13.0
+[debug] [2026-11-25T19:09:30.678Z] Detected Agent: unknown
+[debug] [2026-11-25T19:09:30.678Z] Time:          Wed Nov 25 2026 21:09:30 GMT+0200 (Източноевропейско стандартно време)
+[debug] [2026-11-25T19:09:30.678Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-11-25T19:09:30.722Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2026-11-25T19:09:41.123Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-11-25T19:09:41.123Z] > authorizing via signed-in user (stefanogabriela1@gmail.com)
+[debug] [2026-11-25T19:09:41.124Z] [iam] checking project call-sliven for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-11-25T19:09:41.125Z] Checked if tokens are valid: false, expires at: 1795515516991
+[debug] [2026-11-25T19:09:41.126Z] Checked if tokens are valid: false, expires at: 1795515516991
+[debug] [2026-11-25T19:09:41.126Z] > refreshing access token with scopes: []
+[debug] [2026-11-25T19:09:41.130Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-11-25T19:09:41.130Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]

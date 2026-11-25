@@ -1,7 +1,7 @@
 /* CallSliven — public reports: list + map (PUB-1…3). Only real data:
    list   → search_public_reports (search, category, status, place, period, sort; 20 per page, up to 50)
    map    → public_map_points (up to 500 newest points with the same filters)
-   places → public_settlements (places that have public reports, with counts; migration 028)
+   places → public_settlements (places that have public reports; the count follows the other filters, migration 032)
    Filters stay in the URL, e.g. reports.html?cat=3&status=new,in_progress&place=Кермен&period=30&sort=updated&q=дупка */
 (() => {
   const { $, $$ } = CS;
@@ -14,6 +14,7 @@
       countFiltered:n => `Намерени: <b>${n}</b>`,
       searchLabel:'Търсене на сигнали', searchPh:'Търси по улица или проблем',
       fCategory:'Категория', allCats:'Всички категории', fSort:'Подреждане', sortNew:'Най-нови', sortOld:'Най-стари', sortUpd:'Последно променени',
+      catUnknown:'Избрана категория',
       fStatus:'Статус', allStatuses:'Всички статуси', statusMany:n => `${n} статуса`,
       fPlace:'Населено място', allPlaces:'Всички места',
       legendTip:'Покажи само сигналите с този статус',
@@ -22,7 +23,8 @@
       approx:'Местата са показани приблизително.', showMap:'Карта', showList:'Списък',
       noneT:'Още няма публични сигнали', noneX:'Когато граждани подадат сигнали и те минат проверка, ще ги видиш тук и на картата.',
       emptyT:'Няма сигнали по тези филтри', emptyX:'Опитай друга категория, статус, място или период, или изчисти филтрите.',
-      eLoad:'Сигналите не се заредиха. Провери интернета си и презареди страницата.', mapFail:'Картата не можа да се зареди.', docTitle:'Сигнали'
+      eLoad:'Сигналите не се заредиха. Провери интернета си и презареди страницата.', mapFail:'Картата не можа да се зареди.', docTitle:'Сигнали',
+      eCats:'Категориите не се заредиха, затова менюто „Категория“ е празно. Презареди страницата, за да избереш категория.'
     },
     en: {
       pageTitle:'Reports <em>in Sliven</em>',
@@ -30,6 +32,7 @@
       countFiltered:n => `Found: <b>${n}</b>`,
       searchLabel:'Search reports', searchPh:'Search by street or problem',
       fCategory:'Category', allCats:'All categories', fSort:'Sort', sortNew:'Newest first', sortOld:'Oldest first', sortUpd:'Recently updated',
+      catUnknown:'Chosen category',
       fStatus:'Status', allStatuses:'All statuses', statusMany:n => `${n} statuses`,
       fPlace:'Town or village', allPlaces:'All places',
       legendTip:'Show only reports with this status',
@@ -38,12 +41,13 @@
       approx:'Locations are shown approximately.', showMap:'Map', showList:'List',
       noneT:'No public reports yet', noneX:'When citizens submit reports and they pass review, you will see them here and on the map.',
       emptyT:'No reports match these filters', emptyX:'Try another category, status, place or period, or clear the filters.',
-      eLoad:"Reports didn't load. Check your internet and reload the page.", mapFail:"The map couldn't load.", docTitle:'Reports'
+      eLoad:"Reports didn't load. Check your internet and reload the page.", mapFail:"The map couldn't load.", docTitle:'Reports',
+      eCats:"Categories didn't load, so the Category menu is empty. Reload the page to choose a category."
     }
   });
 
   const state = { q:'', cat:'', st:[], place:'', period:'all', sort:'newest' };
-  let sb = null, cats = [], places = [], items = [], total = 0, offset = 0, seq = 0;
+  let sb = null, cats = [], catsFailed = false, places = [], items = [], total = 0, offset = 0, seq = 0;
 
   /* ═════════ URL ⇄ state ═════════ */
   function readUrl() {
@@ -88,19 +92,35 @@
   const ddStatus = CS.dropdown($('#dd-status'), { icon:statusIcon, label:() => CS.t('fStatus'), value:[], multi:true,
     isActive:v => v.length > 0, many:n => CS.t('statusMany')(n),
     onChange:v => { state.st = PUB.STATUSES.filter(s => v.includes(s)); reload(); } });
+  // the place itself doesn't change the place counts, so they are not reloaded here
   const ddPlace = CS.dropdown($('#dd-place'), { icon:placeIcon, label:() => CS.t('fPlace'), value:'', isActive:v => !!v,
-    onChange:v => { state.place = v; reload(); } });
+    onChange:v => { state.place = v; reload(true, false); } });
   const ddSort = CS.dropdown($('#dd-sort'), { icon:sortIcon, label:() => CS.t('fSort'), value:'newest',
-    onChange:v => { state.sort = v; reload(false); } });
+    onChange:v => { state.sort = v; reload(false, false); } });
 
-  function renderControls() {
-    ddCat.update([{ value:'', label:CS.t('allCats') },
-      ...cats.map(c => ({ value:String(c.id), label:c.name, icon:`<span class="dd-ico">${PUB.icon(c.name)}</span>` }))], state.cat);
-    ddStatus.update([{ value:'', label:CS.t('allStatuses') },
-      ...PUB.STATUSES.map(s => ({ value:s, label:CS.t('s_' + s), icon:`<span class="dd-dot" style="--c:${PUB.COLORS[s]}"></span>` }))], [...state.st]);
+  // shown when the categories didn't load (the list itself may still work)
+  const catErr = Object.assign(document.createElement('div'), { className:'alert-box', hidden:true });
+  catErr.setAttribute('role', 'alert');
+  $('#error').before(catErr);
+
+  function renderCats() {
+    const opts = cats.map(c => ({ value:String(c.id), label:PUB.catName(c.name), icon:`<span class="dd-ico">${PUB.icon(c.name)}</span>` }));
+    // categories didn't load but the URL has one: the filter still works on the server, so keep it visible
+    if (catsFailed && state.cat && !opts.some(o => o.value === state.cat)) opts.push({ value:state.cat, label:CS.t('catUnknown') });
+    ddCat.update([{ value:'', label:CS.t('allCats') }, ...opts], state.cat);
+    catErr.hidden = !catsFailed;
+    catErr.textContent = catsFailed ? CS.t('eCats') : '';
+  }
+  function renderPlaces() {
     ddPlace.update([{ value:'', label:CS.t('allPlaces') },
       ...places.map(p => ({ value:p.name, label:p.name, meta:p.count }))], state.place);
     $('#dd-place').hidden = !places.length && !state.place;
+  }
+  function renderControls() {
+    renderCats();
+    ddStatus.update([{ value:'', label:CS.t('allStatuses') },
+      ...PUB.STATUSES.map(s => ({ value:s, label:CS.t('s_' + s), icon:`<span class="dd-dot" style="--c:${PUB.COLORS[s]}"></span>` }))], [...state.st]);
+    renderPlaces();
     ddSort.update([['newest', 'sortNew'], ['oldest', 'sortOld'], ['updated', 'sortUpd']].map(([v, k]) => ({ value:v, label:CS.t(k) })), state.sort);
     $$('#period button').forEach(b => b.classList.toggle('active', b.dataset.period === state.period));
     movePill();
@@ -139,6 +159,21 @@
     pill.style.left = '4px';
   }
 
+  /* ═════════ Places: every place with public reports; the count follows the other filters (032) ═════════ */
+  let placeSeq = 0;
+  async function loadPlaces() {
+    const my = ++placeSeq;
+    const f = filters();
+    const { data, error } = await sb.rpc('public_settlements', {
+      p_query:f.p_query, p_category_id:f.p_category_id, p_from:f.p_from, p_to:f.p_to, p_statuses:f.p_statuses
+    });
+    if (my !== placeSeq) return false;
+    if (error) { console.warn('[CallSliven] public_settlements:', error); return false; }   // keep the last list
+    places = (data || []).map(r => ({ name:r.out_settlement, count:Number(r.out_count) }));
+    renderPlaces();
+    return true;
+  }
+
   /* ═════════ List ═════════ */
   function card(r, i) {
     const li = document.createElement('li');
@@ -146,7 +181,8 @@
     li.innerHTML = `<span class="r-ico">${PUB.icon(r.out_category)}</span><h2><a></a></h2><span class="r-sub"></span><div class="r-meta"></div>`;
     const a = $('h2 a', li); a.href = `report.html?number=${r.out_number}`; a.textContent = r.out_title;
     li.insertBefore(PUB.pill(r.out_status), $('.r-sub', li));
-    $('.r-sub', li).textContent = [r.out_category, r.out_subcategory].filter(Boolean).join(' · ');
+    // the category follows the chosen language; subcategories exist only in Bulgarian
+    $('.r-sub', li).textContent = [PUB.catName(r.out_category), r.out_subcategory].filter(Boolean).join(' · ');
     const meta = $('.r-meta', li);
     const m = (svg, text) => { const s = document.createElement('span'); s.className = 'm'; s.innerHTML = svg; s.append(text); meta.append(s); };
     if (r.out_address) m('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>', r.out_address);
@@ -188,26 +224,23 @@
   $('#more').addEventListener('click', () => { $('#more').classList.add('loading'); $('#more').disabled = true; loadPage(false); });
 
   /* ═════════ Map ═════════ */
-  let map = null, layer = null, mapSeq = 0;
+  let map = null, layer = null, mapSeq = 0, points = [];
   function initMap() {
     if (!window.L) { $('#map').textContent = CS.t('mapFail'); return; }
     map = L.map('map', { scrollWheelZoom:true }).setView([42.6822, 26.3228], 13);
     CS.tiles(map);
     layer = L.featureGroup().addTo(map);
   }
-  async function loadMap(fit) {
+  // draws the last loaded points; called again on a language change so the popups follow it
+  function drawMap(fit) {
     if (!map) return;
-    const my = ++mapSeq;
-    const { data, error } = await sb.rpc('public_map_points', filters());
-    if (my !== mapSeq) return;
     layer.clearLayers();
-    if (error) { console.warn('[CallSliven] public_map_points:', error); return; }
-    (data || []).forEach(r => {
+    points.forEach(r => {
       const icon = L.divIcon({ className:'pin-wrap', html:`<span class="pin" style="--c:${PUB.COLORS[r.out_status] || PUB.COLORS.new}">${PUB.icon(r.out_category)}</span>`,
         iconSize:[38, 38], iconAnchor:[19, 46], popupAnchor:[0, -44] });
       const mk = L.marker([r.out_lat, r.out_lng], { icon, keyboard:true, title:r.out_title, riseOnHover:true });
       const pop = document.createElement('div');
-      const c = document.createElement('span'); c.className = 'pop-cat'; c.textContent = r.out_category || '';
+      const c = document.createElement('span'); c.className = 'pop-cat'; c.textContent = PUB.catName(r.out_category);
       const t = document.createElement('span'); t.className = 'pop-title'; t.textContent = r.out_title;
       const f = document.createElement('span'); f.className = 'pop-foot';
       const a = document.createElement('a'); a.className = 'pop-link'; a.href = `report.html?number=${r.out_number}`; a.textContent = CS.t('open') + ' →';
@@ -217,8 +250,21 @@
     });
     if (fit && layer.getLayers().length) map.fitBounds(layer.getBounds().pad(0.2), { maxZoom:16 });
   }
+  async function loadMap(fit) {
+    if (!map) return;
+    const my = ++mapSeq;
+    const { data, error } = await sb.rpc('public_map_points', filters());
+    if (my !== mapSeq) return;
+    if (error) { console.warn('[CallSliven] public_map_points:', error); points = []; drawMap(false); return; }
+    points = data || [];
+    drawMap(fit);
+  }
 
-  function reload(fit = true) { writeUrl(); renderControls(); loadPage(true); loadMap(fit); }
+  /* fit: zoom the map to the results; withPlaces: the change can alter the place counts */
+  function reload(fit = true, withPlaces = true) {
+    writeUrl(); renderControls(); loadPage(true); loadMap(fit);
+    if (withPlaces && sb) loadPlaces();
+  }
 
   /* ═════════ Events ═════════ */
   let qTimer;
@@ -255,7 +301,7 @@
   document.addEventListener('cs:lang', () => {
     document.title = CS.t('docTitle') + ' · CallSliven';
     renderControls(); renderToggle();
-    if (sb) renderList();
+    if (sb) { renderList(); drawMap(false); }
     if (!$('#error').hidden) $('#error').textContent = CS.t('eLoad');
   });
 
@@ -268,16 +314,22 @@
   placeMap();
   CS.client().then(async client => {
     sb = client;
-    const [c, p] = await Promise.all([
+    const [c, placesOk] = await Promise.all([
       sb.from('categories').select('id, name, sort_order').order('sort_order').order('name'),
-      sb.rpc('public_settlements')
+      loadPlaces()
     ]);
-    cats = c.data || [];
-    if (p.error) console.warn('[CallSliven] public_settlements:', p.error);
-    places = (p.data || []).map(r => ({ name:r.out_settlement, count:Number(r.out_count) }));
-    if (state.cat && !cats.some(x => String(x.id) === state.cat)) state.cat = '';
-    if (state.place && !places.some(x => x.name === state.place)) state.place = '';
-    reload(true);
+    let catDropped = false;
+    if (c.error) {
+      // keep ?cat= from the URL: the server still filters by it, only the menu can't show the names
+      console.warn('[CallSliven] categories:', c.error);
+      catsFailed = true;
+    } else {
+      cats = c.data || [];
+      if (state.cat && !cats.some(x => String(x.id) === state.cat)) { state.cat = ''; catDropped = true; }
+    }
+    if (placesOk && state.place && !places.some(x => x.name === state.place)) state.place = '';
+    // the places were counted with the URL filters; count again only if an unknown category was dropped
+    reload(true, catDropped);
   }).catch(e => {
     console.warn('[CallSliven] client:', e);
     $('#loading').hidden = true; $('#error').textContent = CS.t('eLoad'); $('#error').hidden = false;

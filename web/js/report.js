@@ -38,7 +38,8 @@
     document.title = CS.t('docTitle')(r.out_number) + ' · CallSliven';
     $('#crumb-id').textContent = '№' + r.out_number;
     $('#r-ico').innerHTML = PUB.icon(r.out_category);
-    $('#r-cat').textContent = [r.out_category, r.out_subcategory].filter(Boolean).join(' · ');
+    // the category follows the chosen language; subcategories exist only in Bulgarian
+    $('#r-cat').textContent = [PUB.catName(r.out_category), r.out_subcategory].filter(Boolean).join(' · ');
     $('#r-title').textContent = r.out_title;
     $('#r-desc').textContent = r.out_description;
     const st = $('#r-status'); st.innerHTML = ''; st.append(PUB.pill(r.out_status));

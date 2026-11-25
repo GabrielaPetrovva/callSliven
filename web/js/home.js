@@ -133,7 +133,7 @@
     const ico = el('span', 'r-icon'); ico.innerHTML = PUB.icon(r.out_category);       // static icon markup only
     const body = el('div');
     const meta = el('div', 'r-meta');
-    meta.append(el('span', 'r-cat', r.out_category || ''));
+    meta.append(el('span', 'r-cat', PUB.catName(r.out_category)));                   // in the chosen language
     const [cls, key] = PILL[r.out_status] || PILL.new;
     const pill = el('span', 'status ' + cls);
     pill.append(el('span', 's-dot'), el('span', 's-text', CS.t(key)));

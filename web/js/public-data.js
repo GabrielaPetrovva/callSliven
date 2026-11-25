@@ -1,5 +1,5 @@
-/* CallSliven — shared helpers for the public pages (reports list, single report).
-   Statuses, colours and category icons. All report data itself comes from the database. */
+/* CallSliven — shared helpers for the public pages (reports list, single report, home carousel).
+   Statuses, colours, category icons and category names. All report data itself comes from the database. */
 (() => {
   CS.addStrings({
     bg: { s_new:'Нов', s_sent:'Изпратен', s_in_progress:'В обработка', s_resolved:'Решен', s_closed:'Затворен' },
@@ -19,10 +19,22 @@
     'Здраве и хигиена':'<path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7z"/>'
   };
   const OTHER = '<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>';
+  // category name in the database (Bulgarian) → translation key in common.js
+  const CAT_KEY = {
+    'Пътища':'cRoads', 'Комунални услуги':'cUtil', 'Околна среда':'cEnv', 'Животни':'cAnimals', 'Строителство':'cBuild',
+    'Транспорт и ред':'cTransport', 'Безопасност':'cSafety', 'Здраве и хигиена':'cHealth', 'Друго':'cOther'
+  };
 
   window.PUB = {
     STATUSES, COLORS,
     icon: name => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO[name] || OTHER}</svg>`,
+    // category name in the visitor's language. In Bulgarian the database name is shown as it is;
+    // a category without a translation (a new one added by a migration) keeps its database name.
+    catName(name) {
+      if (!name) return '';
+      if (CS.lang === 'bg' || !CAT_KEY[name]) return name;
+      return CS.t(CAT_KEY[name]) || name;
+    },
     // status pill as an element (texts go in with textContent)
     pill(status) {
       const s = document.createElement('span');
