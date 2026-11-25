@@ -1,7 +1,8 @@
 # CallSliven — сайт (frontend)
 
 Чист HTML, CSS и JavaScript, без фреймуърк и без пакетиране. Всяка страница работи с истински данни от Supabase
-(проектът `callsliven-dev`). В `web/` няма примерни или тестови данни.
+(проектът `callsliven-dev`). В `web/` няма примерни или тестови данни. На живо: https://callsliven.app
+(старият адрес https://call-sliven.web.app също работи).
 
 Сайтът се отваря през локален сървър на `localhost:5500`, не с двоен клик върху файла: картата, Turnstile и Supabase
 не приемат заявки от `file://` страници, а Turnstile приема само разрешени адреси.
@@ -26,7 +27,7 @@
 | `super-admin.html` | Акаунти и роли, контакти с причина, изпращане, журнал (`#accounts`, `#sending`, `#log`) | Super Admin с втори фактор | виж „Super Admin“ |
 | `help.html` | Помощ: как се подава, статуси, какво може да се подаде, какво е публично, въпроси | всички | `categories`, `subcategories` (активните) |
 | `letters.html` | Писма, жалби, ЗДОИ: къде се подават официалните искания до общината (само информация, нищо не се изпраща) | всички | — (контактите са от mun.sliven.bg, проверени 29.10.2026) |
-| `privacy.html`, `terms.html` | Политика за поверителност и условия (**чернови**) | всички | — |
+| `privacy.html`, `terms.html` | Политика за поверителност и условия, версия v3 от 24.11.2026 (администратор на данните е авторът на дипломния проект) | всички | — |
 
 Страница, която изисква вход, сама праща посетителя към `auth.html?next=<страницата>#login` и го връща обратно след входа.
 Служител без втори фактор отива на `mfa-setup.html`, а служител с фактор, но без въведен код, — на `auth.html` за кода.
@@ -35,7 +36,8 @@
 
 - **Статус:** може няколко наведнъж (`status=new,in_progress`). Легендата на картата също включва и изключва статуси.
 - **Населено място:** едно (`place=Кермен`). Списъкът идва от `public_settlements` (миграция 028): само места с поне един
-  публичен сигнал, Сливен е първо. Мястото се взема от публичния адрес, който геокодерът дава при подаване.
+  публичен сигнал, Сливен е първо. Мястото се взема от публичния адрес, който `submit-report` записва при подаване:
+  от списъка с 47-те места в общината (`nearest_settlement`, миграция 030), ако точката е в някое от тях, иначе от геокодера.
 - Отхвърлени и оттеглени сигнали не са публични и не се появяват, каквото и да има в адреса.
 - На телефон падащите менюта са по две на ред, а периодът е последен.
 
@@ -162,11 +164,11 @@ fonts/            Rubik (latin, cyrillic; 400–700)
 | `language` | localStorage | избраният език |
 | `cs_code_sent` | localStorage | изпратени кодове при регистрация (до 3 на час) |
 | `cs_email_code_sent` | localStorage | изпратени кодове при смяна на имейл (до 3 на час) |
-| `cs_submit_draft` | localStorage | чернова на сигнала във формата |
+| `cs_submit_draft` | sessionStorage | чернова на сигнала във формата (без снимките) |
 | `cs_my_seen_…` | localStorage | кои промени в „Моите сигнали“ са видени |
 | `cs_login_fails` | sessionStorage | неуспешни входове за проверката срещу ботове |
 
-Всички без `language` се трият при изтриване на профила. Последните три още липсват в таблицата в `privacy.html`.
+Всички без `language` се трият при изтриване на профила. Всички са описани в `privacy.html`, т. 9.
 
 ## Настройки (`js/config.js`)
 
@@ -175,12 +177,19 @@ fonts/            Rubik (latin, cyrillic; 400–700)
 
 | Ключ | Какво е |
 |---|---|
-| `SUPABASE_URL`, `SUPABASE_ANON_KEY` | Project Settings → API. Сега `callsliven-dev`; при пускане — production проектът. Новият адрес трябва и в `firebase.json` (`connect-src`, `img-src`) и в `ALLOWED_ORIGINS` на `submit-report` |
-| `TURNSTILE_SITE_KEY` | Публичният ключ на Turnstile; тайният е в Supabase → Authentication → Attack Protection. Домейнът на сайта (`call-sliven.web.app`, `call-sliven.firebaseapp.com`) трябва да е разрешен в Turnstile |
-| `MAPTILER_KEY`, `MAPTILER_STYLE` | Плочки на картата. Празен ключ = CARTO без ключ. Преди пускане ограничи ключа до домейна в MapTiler |
+| `SUPABASE_URL`, `SUPABASE_ANON_KEY` | Project Settings → API. Сега `callsliven-dev`; при пускане — production проектът. Новият адрес трябва и в `firebase.json` (`connect-src`, `img-src`) |
+| `TURNSTILE_SITE_KEY` | Публичният ключ на Turnstile; тайният е в Supabase → Authentication → Attack Protection. Адресите на сайта (`callsliven.app`, `call-sliven.web.app`, `localhost`) трябва да са разрешени в Turnstile |
+| `MAPTILER_KEY`, `MAPTILER_STYLE` | Плочки на картата. Празен ключ = CARTO без ключ. Ключът е ограничен в MapTiler до `callsliven.app`, `call-sliven.web.app`, `localhost` и `127.0.0.1` |
 | `POLICY_VERSION` | Версия на политиката, записва се при регистрация. Вдигни я, когато `privacy.html` се промени: влезлите потребители ще трябва да я приемат отново |
 
 Картата: MapTiler (ако има ключ) → CARTO → OpenStreetMap. Ако един доставчик не отговаря, автоматично се пробва следващият.
+
+Извън `config.js`: адресите, от които `submit-report` приема заявки, са в тайната `ALLOWED_ORIGINS` в Supabase
+(сега `https://callsliven.app`, `https://call-sliven.web.app` и локалните адреси), а Site URL и Redirect URLs за входа са
+в Supabase → Authentication → URL Configuration. Нов адрес на сайта трябва да се добави и на двете места.
+
+Долу на всяка страница, под „Контакт“, е `privacy@callsliven.app` и бележката, че сайтът е дипломен проект, а не
+официален сайт на Община Сливен (текстът `addr` в `common.js`).
 
 ## Правила в кода
 
